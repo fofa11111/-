@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏障碍物标注工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Arial', sans-serif; 
+            background: #1a1a2e; 
+            color: white; 
+            line-height: 1.6; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+        
+        .container { 
+            display: grid; 
+            grid-template-columns: 560px 1fr; 
+            grid-template-rows: 1fr auto; 
+            height: 100vh;
+        }
+        
+        .left-panel { 
+            grid-row: 1 / -1; 
+            display: flex; 
+            flex-direction: column; 
+            background: #16213e; 
+            border-right: 2px solid #4361ee; 
+            overflow-y: auto;
+        }
+        
+        .training-test-container { display: flex; flex-direction: column; flex: 1; }
+        
+        .category-section { 
+            padding: 20px; 
+            background: #16213e; 
+            border-bottom: 1px solid #0f3460;
+        }
+        
+        .category-section h2 { 
+            margin-bottom: 20px; 
+            color: #4361ee; 
+            text-align: center;
+        }
+        
+        .category-list { list-style: none; }
+        
+        .category-item { 
+            margin-bottom: 10px; 
+            padding: 15px; 
+            background: #0f3460; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            text-align: center; 
+            font-weight: bold;
+        }
+        
+        .category-item:hover { background: #1e5f74; transform: translateX(5px); }
+        .category-item.active { background: #e94560; box-shadow: 0 0 15px rgba(233, 69, 96, 0.5); }
+        
+        .training-section, .testing-section { 
+            padding: 20px; 
+            background: #1a1a2e; 
+            border-top: 1px solid #0f3460; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px;
+        }
+        
+        .testing-section { margin-top: auto; }
+        
+        .training-section h3, .testing-section h3 { 
+            color: #4cc9f0; 
+            text-align: center; 
+            margin-bottom: 10px;
+        }
+        
+        .test-instruction { 
+            text-align: center; 
+            color: #a9b6d2; 
+            font-size: 14px;
+        }
+        
+        .drop-area { 
+            border: 3px dashed #4cc9f0; 
+            border-radius: 10px; 
+            padding: 30px; 
+            text-align: center; 
+            transition: all 0.3s ease; 
+            background: rgba(76, 201, 240, 0.05); 
+            min-height: 150px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer;
+        }
+        
+        .drop-area:hover, .drop-area.drag-over { 
+            background: rgba(76, 201, 240, 0.1); 
+            border-color: #4361ee;
+        }
+        
+        .drop-area-content i { color: #4cc9f0; opacity: 0.7; }
+        .drop-area-content p { color: #a9b6d2; margin: 0; }
+        
+        .recognition-result { 
+            background: rgba(34, 197, 94, 0.1); 
+            border: 1px solid #22c55e; 
+            border-radius: 8px; 
+            padding: 15px; 
+            margin-top: 15px;
+        }
+        
+        .recognition-result h4 { 
+            color: #22c55e; 
+            margin-bottom: 10px; 
+            text-align: center;
+        }
+        
+        .result-details { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px;
+        }
+        
+        .result-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px; 
+            background: rgba(255, 255, 255, 0.05); 
+            border-radius: 5px;
+        }
+        
+        .result-label { font-weight: bold; }
+        
+        .result-progress { 
+            width: 60%; 
+            height: 12px; 
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 6px; 
+            overflow: hidden; 
+            position: relative;
+        }
+        
+        .result-progress-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, #22c55e, #16a34a); 
+            border-radius: 6px;
+        }
+        
+        .result-percentage { 
+            font-weight: bold; 
+            min-width: 50px; 
+            text-align: right;
+        }
+        
+        .result-image { 
+            max-width: 100px; 
+            max-height: 100px; 
+            margin: 10px auto; 
+            display: block; 
+            border-radius: 5px; 
+            border: 2px solid #4cc9f0;
+        }
+        
+        .progress-section { display: none; width: 100%; }
+        
+        .progress-bar { 
+            width: 100%; 
+            height: 25px; 
+            background: #0f3460; 
+            border-radius: 15px; 
+            overflow: hidden; 
+            position: relative; 
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, #4cc9f0, #4361ee); 
+            width: 0%; 
+            transition: width 0.3s ease; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            font-size: 12px;
+        }
+        
+        .progress-text { 
+            text-align: center; 
+            margin-top: 8px; 
+            color: #4cc9f0; 
+            font-size: 14px;
+        }
+        
+        #train-button { 
+            padding: 12px 24px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            background: #4cc9f0; 
+            color: white; 
+            border: none; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            box-shadow: 0 4px 15px rgba(76, 201, 240, 0.3); 
+            width: 100%;
+        }
+        
+        #train-button:hover { 
+            background: #4361ee; 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+        }
+        
+        .success-message { 
+            display: none; 
+            text-align: center; 
+            padding: 15px; 
+            background: rgba(34, 197, 94, 0.2); 
+            border-radius: 10px; 
+            border: 2px solid #22c55e;
+        }
+        
+        .success-message h3 { 
+            color: #22c55e; 
+            margin-bottom: 8px; 
+            font-size: 16px;
+        }
+        
+        .right-panel { 
+            display: flex; 
+            flex-direction: column; 
+            background: #1a1a2e; 
+            overflow: hidden;
+        }
+        
+        .header { 
+            padding: 20px; 
+            text-align: center; 
+            background: #16213e; 
+            border-bottom: 1px solid #0f3460;
+        }
+        
+        .header h1 { 
+            color: #4cc9f0; 
+            margin-bottom: 5px;
+        }
+        
+        .header p { 
+            color: #a9b6d2; 
+            font-size: 14px;
+        }
+        
+        .image-grid { 
+            flex: 1; 
+            padding: 30px; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            column-gap: 25px; 
+            row-gap: 30px; 
+            overflow-y: auto;
+        }
+        
+        .image-item { 
+            position: relative; 
+            background: #0f3460; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            aspect-ratio: 1; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+            min-height: 200px;
+        }
+        
+        .image-item:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .image-container { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #1a1a2e; 
+            padding: 10px; 
+            min-height: 140px;
+        }
+        
+        .image-item img { 
+            max-width: 100%; 
+            max-height: 100%; 
+            object-fit: contain; 
+            border-radius: 4px; 
+            display: block; 
+            min-height: 80px;
+        }
+        
+        .category-badge { 
+            padding: 10px 8px; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 14px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            min-height: 40px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        
+        .category-badge.unlabeled { background: #6c757d; opacity: 1; }
+        .category-badge.rock { background: #ff9f1c; color: black; }
+        .category-badge.barrier { background: #e71d36; }
+        .category-badge.dog { background: #22c55e; color: black; }
+        .category-badge.plastic-bag { background: #8338ec; color: white; }
+        .category-badge.grandma { background: #fb8500; color: white; }
+        
+        /* 滚动条样式 */
+        .image-grid::-webkit-scrollbar { width: 8px; }
+        .image-grid::-webkit-scrollbar-track { background: #0f3460; border-radius: 4px; }
+        .image-grid::-webkit-scrollbar-thumb { background: #4361ee; border-radius: 4px; }
+        .image-grid::-webkit-scrollbar-thumb:hover { background: #4cc9f0; }
+        
+        /* 日志区域样式 */
+        .logs-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #0f3460;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .logs-section h4 {
+            color: #4cc9f0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .log-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            border-left: 3px solid #4cc9f0;
+        }
+        
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #4cc9f0;
+        }
+        
+        .log-time {
+            font-size: 12px;
+            color: #a9b6d2;
+        }
+        
+        .log-content {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        
+        .log-table th,
+        .log-table td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .log-table th {
+            background: rgba(255, 255, 255, 0.1);
+            color: #4cc9f0;
+        }
+        
+        .logs-section::-webkit-scrollbar { width: 6px; }
+        .logs-section::-webkit-scrollbar-track { background: #16213e; border-radius: 3px; }
+        .logs-section::-webkit-scrollbar-thumb { background: #4361ee; border-radius: 3px; }
+        .logs-section::-webkit-scrollbar-thumb:hover { background: #4cc9f0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧面板 -->
+        <div class="left-panel">
+            <!-- 左上角：类别选择 -->
+            <div class="category-section">
+                <h2>障碍物类别</h2>
+                <ul class="category-list">
+                    <li class="category-item" data-category="rock">石头</li>
+                    <li class="category-item" data-category="barrier">路障</li>
+                    <li class="category-item" data-category="dog">狗</li>
+                    <li class="category-item" data-category="grandma">老奶奶</li>
+                    <li class="category-item" data-category="unlabeled">清除标注</li>
+                </ul>
+            </div>
+            
+            <div class="training-test-container">
+                <!-- 训练控制 -->
+                <div class="training-section">
+                    <h3>机器学习训练</h3>
+                    
+                    <div class="progress-section" id="progress-section">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill">0%</div>
+                        </div>
+                        <div class="progress-text" id="progress-text">准备训练...</div>
+                    </div>
+                    
+                    <div class="success-message" id="success-message">
+                        <h3>🎉 训练成功！</h3>
+                        <p>您的障碍物识别模型已成功训练完成，可以开始测试了。</p>
+                    </div>
+                    
+                    <button id="train-button">开始机器学习</button>
+                </div>
+                
+                <!-- 测试功能块 -->
+                <div class="testing-section" id="testing-section">
+                    <h3>测试机器学习结果</h3>
+                    <p class="test-instruction">将右侧图片拖放到下方区域进行测试：</p>
+                    <div id="drop-area" class="drop-area">
+                        <div class="drop-area-content">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 48px; margin-bottom: 10px;"></i>
+                            <p>拖放图片到此处</p>
+                        </div>
+                    </div>
+                    <div id="recognition-result" class="recognition-result" style="display: none;">
+                        <h4>识别结果</h4>
+                        <div id="result-details"></div>
+                    </div>
+                    
+                    <!-- 日志区域 -->
+                    <div class="logs-section" id="logs-section">
+                        <h4>训练与测试日志</h4>
+                        <div id="logs-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧：图片区域 -->
+        <div class="right-panel">
+            <div class="header">
+                <h1>游戏障碍物标注工具</h1>
+                <p>选择左侧类别，然后点击右侧图片进行标注</p>
+            </div>
+            
+            <div class="image-grid" id="image-grid">
+                <!-- 图片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 选择器
+            const categoryItems = document.querySelectorAll('.category-item');
+            const imageGrid = document.getElementById('image-grid');
+            const trainButton = document.getElementById('train-button');
+            const progressSection = document.getElementById('progress-section');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            const successMessage = document.getElementById('success-message');
+            const testingSection = document.getElementById('testing-section');
+            const dropArea = document.getElementById('drop-area');
+            const recognitionResult = document.getElementById('recognition-result');
+            const resultDetails = document.getElementById('result-details');
+            const logsSection = document.getElementById('logs-section');
+            const logsContainer = document.getElementById('logs-container');
+            
+            // 初始隐藏测试功能块
+            testingSection.style.display = 'none';
+            
+            // 添加CSS样式
+            const style = document.createElement('style');
+            style.textContent = `
+                #retrain-button {
+                    background: #f97316;
+                    border: none;
+                    color: white;
+                    padding: 12px 24px;
+                    text-align: center;
+                    text-decoration: none;
+                    display: inline-block;
+                    font-size: 16px;
+                    margin: 4px 2px;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    transition: background 0.3s;
+                }
+                
+                #retrain-button:hover {
+                    background: #ea580c;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // 当前选中的类别
+            let selectedCategory = null;
+            
+            // 类别名称映射
+            const categoryNames = {
+                'rock': '石头',
+                'barrier': '路障',
+                'dog': '狗',
+                'grandma': '老奶奶',
+                'plastic-bag': '塑料袋',
+                'unlabeled': '未标注'
+            };
+            
+            // 初始化图片数组
+            const images = [
+                {id: 1, src: 'images/石头1.png', category: null},
+                {id: 2, src: 'images/石头2.png', category: null},
+                {id: 3, src: 'images/石头3.png', category: null},
+                {id: 4, src: 'images/石头6.png', category: null},
+                {id: 5, src: 'images/石头7.png', category: null},
+                {id: 6, src: 'images/石头8.png', category: null},
+                {id: 7, src: 'images/石头9.png', category: null},
+                {id: 8, src: 'images/石头10.png', category: null},
+                {id: 9, src: 'images/石头11.png', category: null},
+                {id: 10, src: 'images/路障 1.png', category: null},
+                {id: 11, src: 'images/路障2.png', category: null},
+                {id: 12, src: 'images/路障3.png', category: null},
+                {id: 13, src: 'images/路障4.png', category: null},
+                {id: 14, src: 'images/路障5.png', category: null},
+                {id: 15, src: 'images/路障6.png', category: null},
+                {id: 16, src: 'images/路障7.png', category: null},
+                {id: 17, src: 'images/路障8.png', category: null},
+                {id: 18, src: 'images/路障9.png', category: null},
+                {id: 19, src: 'images/路障10.png', category: null},
+                {id: 20, src: 'images/狗1.png', category: null},
+                {id: 21, src: 'images/老奶奶1.png', category: null},
+                {id: 22, src: 'images/塑料袋.png', category: null}
+            ];
+            
+            // 测试图片数组 - 石头11-18、老奶奶11-13、路障11-13共15张图片
+            const testImages = [
+                {id: 101, src: 'images/石头11.png', category: null},
+                {id: 102, src: 'images/石头12.png', category: null},
+                {id: 103, src: 'images/石头13.png', category: null},
+                {id: 104, src: 'images/石头14.png', category: null},
+                {id: 105, src: 'images/石头15.png', category: null},
+                {id: 106, src: 'images/石头16.png', category: null},
+                {id: 107, src: 'images/石头17.png', category: null},
+                {id: 108, src: 'images/石头18.png', category: null},
+                {id: 109, src: 'images/老奶奶11.png', category: null},
+                {id: 110, src: 'images/老奶奶12.png', category: null},
+                {id: 111, src: 'images/老奶奶13.png', category: null},
+                {id: 112, src: 'images/路障11.png', category: null},
+                {id: 113, src: 'images/路障12.png', category: null},
+                {id: 114, src: 'images/路障13.png', category: null}
+            ];
+            
+            // 初始化空的训练数据对象
+            let trainingData = {
+                'rock': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 },
+                'barrier': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 },
+                'dog': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 },
+                'grandma': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 },
+                'plastic-bag': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 }
+            };
+            
+            // 为类别选择器添加点击事件
+            categoryItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有类别的选中状态
+                    categoryItems.forEach(cat => cat.classList.remove('active'));
+                    
+                    // 为当前点击的类别添加选中状态
+                    this.classList.add('active');
+                    
+                    // 更新当前选中的类别
+                    selectedCategory = this.dataset.category;
+                });
+            });
+            
+            // 切换到测试图片池
+            function switchToTestImages() {
+                // 清空图片网格
+                imageGrid.innerHTML = '';
+                
+                // 更新右侧面板标题
+                document.querySelector('.right-panel .header h1').textContent = '模型测试';
+                document.querySelector('.right-panel .header p').textContent = '将图片拖放到左侧区域进行测试';
+                
+                // 渲染测试图片
+                testImages.forEach(image => {
+                    const imageItem = document.createElement('div');
+                    imageItem.className = 'image-item';
+                    imageItem.dataset.id = image.id;
+                    
+                    // 初始化时添加类别徽章，默认为未标注
+                    const initialCategory = image.category || 'unlabeled';
+                    const categoryClass = `category-badge ${initialCategory}`;
+                    const categoryText = categoryNames[initialCategory] || '未标注';
+                    
+                    imageItem.innerHTML = `
+                        <div class="image-container">
+                            <img src="${image.src}" alt="${image.src}">
+                        </div>
+                        <div class="${categoryClass}">${categoryText}</div>
+                    `;
+                    
+                    imageGrid.appendChild(imageItem);
+                    
+                    // 添加拖拽功能
+                    imageItem.setAttribute('draggable', 'true');
+                    
+                    imageItem.addEventListener('dragstart', function(e) {
+                        e.dataTransfer.setData('text/plain', JSON.stringify(image));
+                        this.classList.add('dragging');
+                    });
+                    
+                    imageItem.addEventListener('dragend', function() {
+                        this.classList.remove('dragging');
+                    });
+                });
+            }
+            
+            // 为训练按钮添加点击事件
+            trainButton.addEventListener('click', function() {
+                // 显示进度条
+                progressSection.style.display = 'block';
+                progressFill.style.width = '0%';
+                progressText.textContent = '0%';
+                
+                // 模拟训练过程
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 5;
+                    progressFill.style.width = `${progress}%`;
+                    progressText.textContent = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        
+                        // 直接显示成功消息
+                        successMessage.style.display = 'block';
+                        
+                        // 记录训练数据日志
+                        logTrainingData();
+                        
+                        // 显示日志区域
+                        logsSection.style.display = 'block';
+                        
+                        // 隐藏类别选择
+                        document.querySelector('.category-section').style.display = 'none';
+                        
+                        // 保留训练区域（包含成功消息和进度条），只隐藏训练控制按钮
+                        document.querySelector('#train-button').style.display = 'none';
+                        
+                        // 添加下一步按钮到成功消息下方
+                        const nextStepButton = document.createElement('button');
+                        nextStepButton.id = 'next-step-button';
+                        nextStepButton.textContent = '下一步';
+                        nextStepButton.style.marginTop = '10px';
+                        nextStepButton.style.padding = '10px 20px';
+                        nextStepButton.style.fontSize = '16px';
+                        nextStepButton.style.backgroundColor = '#4CAF50';
+                        nextStepButton.style.color = 'white';
+                        nextStepButton.style.border = 'none';
+                        nextStepButton.style.borderRadius = '4px';
+                        nextStepButton.style.cursor = 'pointer';
+                        
+                        // 添加点击事件跳转到汽车游戏页面
+                        nextStepButton.addEventListener('click', function() {
+                            window.location.href = 'car-simulation.html';
+                        });
+                        
+                        // 将按钮添加到成功消息下方
+                        successMessage.appendChild(nextStepButton);
+                        
+                        // 显示测试功能块
+                        testingSection.style.display = 'block';
+                        
+                        // 创建新的重新学习按钮并添加到测试区域顶部
+                        const retrainButton = document.createElement('button');
+                        retrainButton.id = 'retrain-button';
+                        retrainButton.textContent = '重新学习';
+                        retrainButton.style.marginTop = '10px';
+                        retrainButton.addEventListener('click', function() {
+                            // 刷新页面回到训练模式
+                            location.reload();
+                        });
+                        testingSection.prepend(retrainButton);
+                        
+                        // 切换到测试图片池
+                        switchToTestImages();
+                    }
+                }, 100);
+            });
+            
+            // 渲染初始图片到页面上
+            images.forEach(image => {
+                const imageItem = document.createElement('div');
+                imageItem.className = 'image-item';
+                imageItem.dataset.id = image.id;
+                
+                // 初始化时添加类别徽章，默认为未标注
+                const initialCategory = image.category || 'unlabeled';
+                const categoryClass = `category-badge ${initialCategory}`;
+                const categoryText = categoryNames[initialCategory] || '未标注';
+                
+                imageItem.innerHTML = `
+                    <div class="image-container">
+                        <img src="${image.src}" alt="${image.src}">
+                    </div>
+                    <div class="${categoryClass}">${categoryText}</div>
+                `;
+                
+                imageGrid.appendChild(imageItem);
+                
+                // 添加点击事件用于标注
+                imageItem.addEventListener('click', function() {
+                    if (selectedCategory) {
+                        // 获取类别徽章元素
+                        const categoryBadge = this.querySelector('.category-badge');
+                        
+                        if (selectedCategory === 'unlabeled') {
+                            // 清除标注
+                            this.classList.remove('annotated');
+                            this.removeAttribute('data-category');
+                            image.category = null;
+                            
+                            // 更新类别徽章
+                            if (categoryBadge) {
+                                categoryBadge.className = 'category-badge unlabeled';
+                                categoryBadge.textContent = '未标注';
+                            }
+                        } else {
+                            // 添加标注
+                            this.classList.add('annotated');
+                            this.dataset.category = selectedCategory;
+                            image.category = selectedCategory;
+                            
+                            // 更新类别徽章
+                            if (categoryBadge) {
+                                categoryBadge.className = `category-badge ${selectedCategory}`;
+                                categoryBadge.textContent = categoryNames[selectedCategory] || selectedCategory;
+                            }
+                            
+                            // 更新训练数据 - 当标注图片时，使用该图片的文件名来判断实际类型
+                            // 从图片src中提取实际类型
+                            let actualType = 'unlabeled';
+                            const src = image.src.toLowerCase();
+                            if (src.includes('石头')) actualType = 'rock';
+                            else if (src.includes('路障')) actualType = 'barrier';
+                            else if (src.includes('狗')) actualType = 'dog';
+                            else if (src.includes('老奶奶')) actualType = 'grandma';
+                            else if (src.includes('塑料袋')) actualType = 'plastic-bag';
+                            
+                            // 只在实际类型与标注类别不同时更新混淆矩阵
+                            if (actualType !== 'unlabeled') {
+                                updateTrainingData(selectedCategory, actualType);
+                            }
+                        }
+                    }
+                });
+                
+                // 添加拖拽功能
+                imageItem.setAttribute('draggable', 'true');
+                
+                imageItem.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', JSON.stringify(image));
+                    this.classList.add('dragging');
+                });
+                
+                imageItem.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                });
+            });
+            
+            // 更新训练数据
+            function updateTrainingData(actualCategory, actualType) {
+                // 确保类别存在
+                if (!trainingData[actualCategory]) {
+                    trainingData[actualCategory] = {};
+                }
+                
+                // 初始化或增加计数
+                if (trainingData[actualCategory][actualType] === undefined) {
+                    trainingData[actualCategory][actualType] = 1;
+                } else {
+                    trainingData[actualCategory][actualType]++;
+                }
+            }
+            
+            // 计算单个类别的概率
+            function calculateCategoryProbability(category, matchingImagesCount, totalImagesCount) {
+                // 默认值处理
+                matchingImagesCount = matchingImagesCount || 0;
+                totalImagesCount = totalImagesCount || 0;
+                
+                // 如果该类别没有训练数据，概率较低但不为0
+                if (totalImagesCount === 0) {
+                    return 4 + Math.random() * 4; // 4-8%的基础概率
+                }
+                
+                // 计算匹配率
+                const matchRate = matchingImagesCount / totalImagesCount;
+                
+                // 根据匹配图像数量计算基础概率
+                let baseProbability, range;
+                
+                if (matchingImagesCount <= 0) {
+                    baseProbability = 5;
+                    range = 3;
+                } else if (matchingImagesCount === 1) {
+                    baseProbability = Math.max(0, 15 * matchRate);
+                    range = 6;
+                } else if (matchingImagesCount === 2) {
+                    baseProbability = Math.max(0, 30 * matchRate);
+                    range = 5;
+                } else if (matchingImagesCount === 3) {
+                    baseProbability = Math.max(0, 40 * matchRate);
+                    range = 4;
+                } else if (matchingImagesCount === 4) {
+                    baseProbability = Math.max(0, 50 * matchRate);
+                    range = 4;
+                } else if (matchingImagesCount === 5) {
+                    baseProbability = Math.max(0, 60 * matchRate);
+                    range = 3;
+                } else if (matchingImagesCount === 6) {
+                    baseProbability = Math.max(0, 70 * matchRate);
+                    range = 3;
+                } else if (matchingImagesCount === 7) {
+                    baseProbability = Math.max(0, 80 * matchRate);
+                    range = 2;
+                } else if (matchingImagesCount === 8) {
+                    baseProbability = Math.max(0, 90 * matchRate);
+                    range = 2;
+                } else {
+                    // 9张及以上 - 提高权重，让大量训练数据的类别获得更高概率
+                    baseProbability = Math.max(0, Math.min(99 * matchRate, 99));
+                    range = 1; // 减少随机性，增加确定性
+                }
+                
+                // 添加随机性
+                const randomOffset = (Math.random() - 0.5) * 2 * range;
+                let probability = baseProbability + randomOffset;
+                
+                // 确保概率在合理范围内
+                probability = Math.max(0.5, Math.min(99.5, probability));
+                
+                return probability;
+            }
+            
+            // 计算各类别的概率（优化版 - 整合概率计算逻辑，改进归一化处理）
+            function calculateProbabilities(actualType) {
+                const categories = ['rock', 'barrier', 'dog', 'grandma', 'plastic-bag'];
+                const results = [];
+                
+                // 找出有最多训练数据的类别作为基准
+                let maxTrainingData = 0;
+                let hasSignificantTrainingData = false;
+                
+                // 对每个类别计算初始概率
+                for (const category of categories) {
+                    // 获取该类别的训练数据
+                    const categoryData = trainingData[category];
+                    
+                    // 计算类别总图片数
+                    let totalImagesCount = 0;
+                    for (const type in categoryData) {
+                        totalImagesCount += categoryData[type] || 0;
+                    }
+                    
+                    // 更新最大训练数据量
+                    if (totalImagesCount > maxTrainingData) {
+                        maxTrainingData = totalImagesCount;
+                    }
+                    
+                    // 判断是否有足够的训练数据
+                    if (totalImagesCount >= 5) {
+                        hasSignificantTrainingData = true;
+                    }
+                    
+                    // 计算匹配图片数
+                    const matchingImagesCount = categoryData[actualType] || 0;
+                    
+                    // 调用优化后的单个类别概率计算函数
+                    const probability = calculateCategoryProbability(category, matchingImagesCount, totalImagesCount);
+                    
+                    results.push({
+                        category: category,
+                        name: categoryNames[category],
+                        probability: probability,
+                        totalImagesCount: totalImagesCount // 保存用于后续权重计算
+                    });
+                }
+                
+                // 步骤5：改进的概率归一化处理
+                // 当有显著训练数据时，使用加权归一化，让训练数据多的类别获得更高权重
+                if (hasSignificantTrainingData && maxTrainingData > 0) {
+                    let weightedTotal = 0;
+                    
+                    // 计算加权总和
+                    for (const result of results) {
+                        // 为训练数据多的类别增加更明显的权重
+                        const confidenceWeight = 1 + 1.5 * (result.totalImagesCount / maxTrainingData);
+                        result.weightedProbability = result.probability * confidenceWeight;
+                        weightedTotal += result.weightedProbability;
+                    }
+                    
+                    // 应用加权归一化
+                    const adjustmentFactor = 100 / weightedTotal;
+                    for (const result of results) {
+                        result.probability = result.weightedProbability * adjustmentFactor;
+                        // 释放临时属性
+                        delete result.weightedProbability;
+                    }
+                } else {
+                    // 传统归一化（当训练数据较少时）
+                    let totalProbability = 0;
+                    for (const result of results) {
+                        totalProbability += result.probability;
+                    }
+                    
+                    if (totalProbability === 0) {
+                        // 如果总和为0，平均分配
+                        const equalProbability = 100 / categories.length;
+                        for (const result of results) {
+                            result.probability = equalProbability;
+                        }
+                    } else {
+                        // 应用调整因子确保总和为100%
+                        const adjustmentFactor = 100 / totalProbability;
+                        for (const result of results) {
+                            result.probability = result.probability * adjustmentFactor;
+                        }
+                    }
+                }
+                
+                // 四舍五入并确保概率在合理范围内
+                for (const result of results) {
+                    result.probability = Math.round(result.probability);
+                    result.probability = Math.max(0.5, Math.min(99.5, result.probability));
+                    // 释放临时属性
+                    delete result.totalImagesCount;
+                }
+                
+                // 按概率排序
+                results.sort((a, b) => b.probability - a.probability);
+                
+                return results;
+            }
+            
+            // 处理图片拖放测试
+            function handleDrop(e) {
+                e.preventDefault();
+                dropArea.classList.remove('drag-over');
+                
+                try {
+                    // 尝试获取拖拽的数据
+                    const imageDataJson = e.dataTransfer.getData('text/plain');
+                    const imageData = JSON.parse(imageDataJson);
+                    
+                    // 从图片src中提取实际类型（与标注时使用相同的逻辑）
+                    let actualType = 'unlabeled';
+                    const src = imageData.src.toLowerCase();
+                    if (src.includes('石头')) actualType = 'rock';
+                    else if (src.includes('路障')) actualType = 'barrier';
+                    else if (src.includes('狗')) actualType = 'dog';
+                    else if (src.includes('老奶奶')) actualType = 'grandma';
+                    else if (src.includes('塑料袋')) actualType = 'plastic-bag';
+                    
+                    // 如果无法从文件名确定类型，使用随机类型
+                    if (actualType === 'unlabeled') {
+                        actualType = ['rock', 'barrier', 'dog', 'grandma', 'plastic-bag'][Math.floor(Math.random() * 5)];
+                    }
+                    
+                    // 计算概率
+                    const results = calculateProbabilities(actualType);
+                    
+                    // 显示结果
+                    displayRecognitionResults(results, imageData.src);
+                } catch (error) {
+                    console.error('处理拖放失败:', error);
+                }
+            }
+            
+            // 显示识别结果
+            function displayRecognitionResults(results, imageSrc) {
+                // 清空之前的结果
+                resultDetails.innerHTML = '';
+                
+                // 添加结果项
+                results.forEach(result => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+                    
+                    resultItem.innerHTML = `
+                        <span class="result-label">${result.name}</span>
+                        <div class="result-progress">
+                            <div class="result-progress-fill" style="width: ${result.probability}%"></div>
+                        </div>
+                        <span class="result-percentage">${result.probability}%</span>
+                    `;
+                    
+                    resultDetails.appendChild(resultItem);
+                });
+                
+                // 如果有图片源，添加图片预览
+                if (imageSrc) {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = imageSrc;
+                    imgElement.className = 'result-image';
+                    resultDetails.insertBefore(imgElement, resultDetails.firstChild);
+                }
+                
+                // 显示结果区域
+                recognitionResult.style.display = 'block';
+                
+                // 记录测试结果日志
+                logTestResults(results, imageSrc);
+            }
+            
+            // 记录训练数据到日志
+            function logTrainingData() {
+                const now = new Date();
+                const timestamp = now.toLocaleString();
+                
+                // 创建日志项
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                
+                // 构建训练数据表格
+                let tableHtml = `
+                    <table class="log-table">
+                        <thead>
+                            <tr>
+                                <th>类别</th>
+                                <th>石头</th>
+                                <th>路障</th>
+                                <th>狗</th>
+                                <th>老奶奶</th>
+                                <th>塑料袋</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                
+                // 添加每行数据
+                for (const [category, data] of Object.entries(trainingData)) {
+                    tableHtml += `
+                        <tr>
+                            <td>${categoryNames[category]}</td>
+                            <td>${data['rock'] || 0}</td>
+                            <td>${data['barrier'] || 0}</td>
+                            <td>${data['dog'] || 0}</td>
+                            <td>${data['grandma'] || 0}</td>
+                            <td>${data['plastic-bag'] || 0}</td>
+                        </tr>`;
+                }
+                
+                tableHtml += `
+                        </tbody>
+                    </table>`;
+                
+                logItem.innerHTML = `
+                    <div class="log-header">
+                        <span>训练数据</span>
+                        <span class="log-time">${timestamp}</span>
+                    </div>
+                    <div class="log-content">
+                        训练完成，当前训练数据集如下：
+                        ${tableHtml}
+                    </div>`;
+                
+                // 添加到日志容器
+                logsContainer.prepend(logItem);
+            }
+            
+            // 记录测试结果到日志
+            function logTestResults(results, imageSrc) {
+                const now = new Date();
+                const timestamp = now.toLocaleString();
+                
+                // 创建日志项
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                
+                // 构建测试结果表格
+                let tableHtml = `
+                    <table class="log-table">
+                        <thead>
+                            <tr>
+                                <th>类别</th>
+                                <th>概率</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                
+                // 添加每行数据
+                results.forEach(result => {
+                    tableHtml += `
+                        <tr>
+                            <td>${result.name}</td>
+                            <td>${result.probability}%</td>
+                        </tr>`;
+                });
+                
+                tableHtml += `
+                        </tbody>
+                    </table>`;
+                
+                logItem.innerHTML = `
+                    <div class="log-header">
+                        <span>测试结果</span>
+                        <span class="log-time">${timestamp}</span>
+                    </div>
+                    <div class="log-content">
+                        测试图片识别结果如下：
+                        ${tableHtml}
+                    </div>`;
+                
+                // 添加到日志容器
+                logsContainer.prepend(logItem);
+            }
+            
+            // 设置拖放区域事件
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.classList.add('drag-over');
+            }
+            
+            function unhighlight() {
+                dropArea.classList.remove('drag-over');
+            }
+            
+            // 添加拖放处理
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            // 支持点击上传
+            dropArea.addEventListener('click', function() {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            // 为上传的图片随机选择一个类型进行测试
+                            const actualType = ['rock', 'barrier', 'dog', 'grandma', 'plastic-bag'][Math.floor(Math.random() * 5)];
+                            const results = calculateProbabilities(actualType);
+                            displayRecognitionResults(results, e.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                };
+                fileInput.click();
+            });
+        });
+    </script>
+</body>
+</html>

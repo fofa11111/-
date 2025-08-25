@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI交通执法模拟器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #000; }
+        #game-container { position: relative; width: 100vw; height: 100vh; }
+        #scene-canvas { width: 100%; height: 100%; }
+        #ui-overlay { position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; pointer-events: none; }
+        .control-panel { background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; display: flex; gap: 15px; pointer-events: auto; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; background: #2c3e50; color: white; cursor: pointer; font-size: 16px; transition: all 0.2s; }
+        .btn:hover { background: #3498db; }
+        .btn.active { background: #e74c3c; }
+        #status-display { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); color: white; padding: 15px; border-radius: 10px; font-family: Arial, sans-serif; }
+        .status-item { margin: 5px 0; }
+        #detection-box { position: absolute; border: 2px solid red; display: none; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="scene-canvas"></canvas>
+        <div id="status-display">
+            <div class="status-item">违规计数: <span id="violation-count">0</span></div>
+            <div class="status-item">当前得分: <span id="score">0</span></div>
+            <div class="status-item">红灯状态: <span id="light-status">绿灯</span></div>
+        </div>
+        <div id="ui-overlay">
+            <div class="control-panel">
+                <button class="btn" id="capture-btn">抓拍违规</button>
+                <button class="btn" id="toggle-camera">切换视角</button>
+                <button class="btn" id="start-detection">开始检测</button>
+            </div>
+        </div>
+        <div id="detection-box"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <script type="module" src="/src/index.js"></script>
+</body>
+</html>

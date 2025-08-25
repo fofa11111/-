@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声纹识别开门剧情游戏</title>
+    <!-- 引入Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'Arial', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #0a0a0a;
+            overflow: hidden;
+        }
+        
+        /* 背景效果 */
+        #background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(50, 50, 50, 0.1) 0%, rgba(0, 0, 0, 0.9) 70%);
+            z-index: -1;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+        
+        /* 门的样式 */
+        .door {
+            position: relative;
+            width: 450px;
+            height: 650px;
+            background: linear-gradient(135deg, #4a3c31 0%, #2a1f17 100%);
+            border-radius: 15px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 20px rgba(100, 80, 60, 0.3);
+            overflow: hidden;
+            border: 2px solid #3a2c21;
+        }
+        
+        /* 门的纹理 */
+        .door::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1) 1px, transparent 1px, transparent 30px),
+                repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1) 1px, transparent 1px, transparent 30px);
+            pointer-events: none;
+        }
+        
+        /* 门缝效果 */
+        .door.opened::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -15px;
+            width: 30px;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,235,200,0.8) 0%, rgba(255,250,240,0.5) 100%);
+            animation: lightGlow 2s ease-in-out infinite alternate;
+            box-shadow: 0 0 30px rgba(255, 235, 200, 0.5);
+        }
+        
+        /* 欢迎回家光效 */
+        #welcome-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 80% 50%, rgba(255, 235, 200, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        #welcome-glow.active {
+            opacity: 1;
+        }
+        
+        /* 屏幕样式 */
+        .screen {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 320px;
+            height: 180px;
+            background: linear-gradient(135deg, #0a3a12 0%, #0a2a12 100%);
+            border: 12px solid #3a3a3a;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #00ff6c;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: inset 0 0 30px rgba(0, 255, 108, 0.3), 0 0 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.5s ease;
+            letter-spacing: 1px;
+        }
+        
+        /* 屏幕边框效果 */
+        .screen::after {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 20px;
+            background: linear-gradient(45deg, transparent 0%, rgba(0, 255, 108, 0.1) 50%, transparent 100%);
+            z-index: -1;
+            opacity: 0;
+            animation: borderGlow 2s ease-in-out infinite;
+        }
+        
+        .screen.error::after {
+            background: linear-gradient(45deg, transparent 0%, rgba(255, 58, 58, 0.1) 50%, transparent 100%);
+        }
+        
+        /* 屏幕错误状态 */
+        .screen.error {
+            background: linear-gradient(135deg, #3a0a0a 0%, #2a0a0a 100%);
+            color: #ff5a5a;
+            box-shadow: inset 0 0 30px rgba(255, 58, 58, 0.3), 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* 按键样式 */
+        .button {
+            position: absolute;
+            top: 300px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 55px;
+            background: linear-gradient(135deg, #007400 0%, #009000 100%);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 255, 108, 0.3);
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            overflow: hidden;
+        }
+        
+        /* 按钮光效 */
+        .button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+            transform: rotate(45deg);
+            transition: transform 0.5s ease;
+        }
+        
+        .button:hover::before {
+            transform: rotate(45deg) translateX(100%);
+        }
+        
+        .button:hover {
+            background: linear-gradient(135deg, #009000 0%, #00c300 100%);
+            transform: translateX(-50%) scale(1.08);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 255, 108, 0.5);
+        }
+        
+        .button:active {
+            transform: translateX(-50%) scale(0.95);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 255, 108, 0.3);
+        }
+        
+        /* 角色样式 */
+        .character {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 250px;
+            opacity: 0;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            transform: translateX(-50%) translateY(20px);
+        }
+        
+        .character.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        /* 男性角色 */
+        .man {
+            background: url('images/男人e.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom center;
+        }
+        
+        /* 女性角色 */
+        .woman {
+            background: url('images/女人.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom center;
+        }
+        
+        /* 图标样式 */
+        .icon {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateX(-50%) scale(0.8);
+        }
+        
+        .icon.visible {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+            animation: iconBounce 0.5s ease;
+        }
+        
+        /* 语音按钮样式 */
+        #voice-button {
+            position: absolute;
+            top: 400px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #1a8cff 0%, #0066cc 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 36px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 20px rgba(26, 140, 255, 0.5);
+            transition: all 0.3s ease;
+            opacity: 0;
+            z-index: 10;
+        }
+        
+        #voice-button.visible {
+            opacity: 1;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        #voice-button:hover {
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7), 0 0 30px rgba(26, 140, 255, 0.7);
+        }
+        
+        #voice-button:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+        
+        /* 语音按钮波浪效果 */
+        #voice-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 140, 255, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            animation: wave 2s ease-out infinite;
+        }
+        
+        /* 说话气泡样式 */
+        .speech-bubble {
+            position: absolute;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            padding: 15px 25px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: translateX(-50%) translateY(20px);
+            max-width: 200px;
+            text-align: center;
+            z-index: 20;
+        }
+        
+        .speech-bubble.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 15px solid #ffffff;
+        }
+        
+        /* 说话文字样式 */
+        .speech-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 1px;
+        }
+        
+        /* 字母逐个出现的样式 */
+        .speech-text span {
+            opacity: 0;
+            display: inline-block;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .speech-text.appear span {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .speech-text.letter-appear span {
+            animation: letterAppear 0.3s ease forwards;
+        }
+        
+        /* 加载指示器 */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #00ff6c;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+            box-shadow: 0 0 30px rgba(0, 255, 108, 0.3);
+        }
+        
+        .loading.error {
+            border-top-color: #ff5a5a;
+            box-shadow: 0 0 30px rgba(255, 58, 58, 0.3);
+        }
+        
+        /* 装饰性效果 */
+        .decorative-line {
+            position: absolute;
+            width: 80%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, rgba(100, 80, 60, 0.3) 50%, transparent 100%);
+            left: 10%;
+        }
+        
+        .decorative-line.top {
+            top: 80px;
+        }
+        
+        .decorative-line.bottom {
+            bottom: 320px;
+        }
+        
+        /* 动画定义 */
+        @keyframes lightGlow {
+            0% {
+                opacity: 0.6;
+                box-shadow: 0 0 20px rgba(255, 235, 200, 0.6);
+            }
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 40px rgba(255, 250, 240, 0.9);
+            }
+        }
+        
+        @keyframes spin {
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+        
+        @keyframes borderGlow {
+            0%, 100% {
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes iconBounce {
+            0% {
+                transform: translateX(-50%) scale(0.8);
+            }
+            50% {
+                transform: translateX(-50%) scale(1.1);
+            }
+            100% {
+                transform: translateX(-50%) scale(1);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 20px rgba(26, 140, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7), 0 0 30px rgba(26, 140, 255, 0.7);
+            }
+        }
+        
+        @keyframes wave {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes letterAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .door {
+                width: 300px;
+                height: 450px;
+            }
+            
+            .screen {
+                width: 220px;
+                height: 120px;
+                font-size: 20px;
+                border: 8px solid #3a3a3a;
+            }
+            
+            .button {
+                width: 110px;
+                height: 45px;
+                font-size: 16px;
+                top: 240px;
+            }
+            
+            .character {
+                width: 100px;
+                height: 160px;
+            }
+            
+            #voice-button {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+                top: 320px;
+            }
+            
+            .speech-bubble {
+                top: -80px;
+                padding: 10px 20px;
+                max-width: 150px;
+            }
+            
+            .speech-text {
+                font-size: 16px;
+            }
+            
+            .loading {
+                width: 40px;
+                height: 40px;
+                border-width: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="background-overlay"></div>
+    <div id="game-container">
+        <div class="door" id="door">
+            <!-- 装饰线条 -->
+            <div class="decorative-line top"></div>
+            <div class="decorative-line bottom"></div>
+            
+            <!-- 欢迎回家光效 -->
+            <div id="welcome-glow"></div>
+            
+            <!-- 门禁屏幕 -->
+            <div class="screen" id="screen">
+                <span id="screen-text"></span>
+                <div class="icon" id="icon"></div>
+            </div>
+            
+            <!-- 开门按钮 -->
+            <button class="button" id="door-button">开门</button>
+            
+            <!-- 语音按钮 -->
+            <button id="voice-button"><i class="fas fa-microphone"></i></button>
+            
+            <!-- 角色：男性 -->
+            <div class="character man" id="man">
+                <div class="speech-bubble" id="man-speech">
+                    <div class="speech-text" id="man-speech-text"></div>
+                </div>
+            </div>
+            
+            <!-- 角色：女性 -->
+            <div class="character woman" id="woman">
+                <div class="speech-bubble" id="woman-speech">
+                    <div class="speech-text" id="woman-speech-text"></div>
+                </div>
+            </div>
+            
+            <!-- 加载指示器 -->
+            <div class="loading" id="loading"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 获取DOM元素
+        const screen = document.getElementById('screen');
+        const screenText = document.getElementById('screen-text');
+        const doorButton = document.getElementById('door-button');
+        const door = document.getElementById('door');
+        const man = document.getElementById('man');
+        const manSpeech = document.getElementById('man-speech');
+        const manSpeechText = document.getElementById('man-speech-text');
+        const woman = document.getElementById('woman');
+        const womanSpeech = document.getElementById('woman-speech');
+        const womanSpeechText = document.getElementById('woman-speech-text');
+        const icon = document.getElementById('icon');
+        const loading = document.getElementById('loading');
+        const voiceButton = document.getElementById('voice-button');
+        const welcomeGlow = document.getElementById('welcome-glow');
+        
+        // 设置初始状态
+        let currentScene = 0;
+        let isManSpeaking = false;
+        let isWomanSpeaking = false;
+        
+        // 开始游戏
+        function startGame() {
+            // 第一幕
+            sceneOne();
+        }
+        
+        // 第一幕：门上有一个巨大的屏幕，屏幕下面有一个按键，按键上面写着"开门"，3秒后下一幕
+        function sceneOne() {
+            screenText.textContent = '';
+            doorButton.style.display = 'block';
+            
+            setTimeout(() => {
+                sceneTwo();
+            }, 3000);
+        }
+        
+        // 第二幕：出现一位男人站在门口，他按下屏幕下面的按键，屏幕上显示"请说话开门"，点击语音按钮后说"芝麻开门"
+        function sceneTwo() {
+            currentScene = 2;
+            
+            // 显示男人
+            man.classList.add('visible');
+            
+            // 模拟按键被按下
+            setTimeout(() => {
+                doorButton.style.backgroundColor = '#004000';
+                doorButton.style.transform = 'translateX(-50%) scale(0.95)';
+                
+                setTimeout(() => {
+                    doorButton.style.backgroundColor = '';
+                    doorButton.style.transform = 'translateX(-50%)';
+                }, 200);
+            }, 500);
+            
+            // 屏幕显示"请说话开门"
+            setTimeout(() => {
+                screenText.textContent = '请说话开门';
+                
+                // 显示语音按钮
+                setTimeout(() => {
+                    voiceButton.classList.add('visible');
+                    
+                    // 为语音按钮添加点击事件
+                    voiceButton.addEventListener('click', handleVoiceButtonClick);
+                }, 500);
+            }, 1000);
+        }
+        
+        // 第三幕：屏幕上显示 "欢迎回家"，绿色对勾图标出现在屏幕上，同时门已打开一条缝隙，门后有温暖的室内光线透出
+        function sceneThree() {
+            // 隐藏语音按钮
+            voiceButton.classList.remove('visible');
+            
+            // 屏幕显示"欢迎回家"
+            screenText.textContent = '欢迎回家';
+            
+            // 显示绿色对勾图标
+            icon.textContent = '✓';
+            icon.style.color = '#00ff4c';
+            icon.classList.add('visible');
+            
+            // 门打开一条缝隙
+            door.classList.add('opened');
+            
+            // 激活欢迎回家光效
+            welcomeGlow.classList.add('active');
+            
+            // 两秒后进入第四幕
+            setTimeout(() => {
+                icon.classList.remove('visible');
+                man.classList.remove('visible');
+                manSpeech.classList.remove('visible');
+                welcomeGlow.classList.remove('active');
+                sceneFour();
+            }, 2000);
+        }
+        
+        // 第四幕：出现一位陌生女性走到门口，她说芝麻开门，门禁屏幕显示 "声纹匹配失败"，红色叉号图标出现，门保持关闭状态
+        function sceneFour() {
+            currentScene = 4;
+            
+            // 重置屏幕状态
+            screenText.textContent = '请说话开门';
+            screen.classList.remove('error');
+            door.classList.remove('opened');
+            
+            // 显示女性
+            woman.classList.add('visible');
+            
+            // 显示语音按钮（错误状态）
+            setTimeout(() => {
+                voiceButton.classList.add('visible');
+                
+                // 为语音按钮添加点击事件
+                voiceButton.addEventListener('click', handleVoiceButtonClick);
+            }, 1000);
+        }
+        
+        // 处理语音按钮点击
+        function handleVoiceButtonClick() {
+            // 移除点击事件，防止重复点击
+            voiceButton.removeEventListener('click', handleVoiceButtonClick);
+            
+            // 语音按钮动画效果
+            voiceButton.style.transform = 'translateX(-50%) scale(0.9)';
+            
+            setTimeout(() => {
+                voiceButton.style.transform = 'translateX(-50%) scale(1)';
+            }, 200);
+            
+            // 根据当前场景判断是谁在说话
+            if (currentScene === 2 && !isManSpeaking) {
+                isManSpeaking = true;
+                showSpeakingAnimation(manSpeech, manSpeechText, '芝麻开门', sceneThree);
+            } else if (currentScene === 4 && !isWomanSpeaking) {
+                isWomanSpeaking = true;
+                showSpeakingAnimation(womanSpeech, womanSpeechText, '芝麻开门', showRecognitionFailed);
+            }
+        }
+        
+        // 显示说话动画
+        function showSpeakingAnimation(speechContainer, speechTextElement, text, callback) {
+            // 显示对话容器
+            speechContainer.classList.add('visible');
+            
+            // 为文字创建字母逐个出现的效果
+            speechTextElement.innerHTML = '';
+            for (let i = 0; i < text.length; i++) {
+                const span = document.createElement('span');
+                span.textContent = text[i];
+                span.style.animationDelay = `${i * 0.1}s`;
+                speechTextElement.appendChild(span);
+            }
+            
+            // 添加字母出现动画类
+            speechTextElement.classList.add('appear', 'letter-appear');
+            
+            // 说话完成后执行回调
+            setTimeout(() => {
+                // 显示加载指示器
+                loading.style.display = 'block';
+                
+                // 如果是第四幕，设置加载指示器为错误状态
+                if (currentScene === 4) {
+                    loading.classList.add('error');
+                }
+                
+                // 识别完成后执行回调
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                    loading.classList.remove('error');
+                    callback();
+                }, 1500);
+            }, 1500);
+        }
+        
+        // 显示识别失败状态
+        function showRecognitionFailed() {
+            // 隐藏语音按钮
+            voiceButton.classList.remove('visible');
+            
+            // 屏幕显示"声纹匹配失败"
+            screenText.textContent = '声纹匹配失败';
+            screen.classList.add('error');
+            
+            // 显示红色叉号图标
+            icon.textContent = '✗';
+            icon.style.color = '#ff3a3a';
+            icon.classList.add('visible');
+            
+            // 门保持关闭状态
+            door.classList.remove('opened');
+            
+            // 添加游戏重新开始的逻辑
+            setTimeout(() => {
+                // 重置所有状态
+                resetGame();
+                
+                // 显示重新开始按钮或自动重新开始
+                doorButton.textContent = '重新开始';
+                doorButton.style.display = 'block';
+                doorButton.addEventListener('click', restartGame);
+            }, 3000);
+        }
+        
+        // 重置游戏
+        function resetGame() {
+            screenText.textContent = '';
+            screen.classList.remove('error');
+            icon.classList.remove('visible');
+            man.classList.remove('visible');
+            woman.classList.remove('visible');
+            manSpeech.classList.remove('visible');
+            womanSpeech.classList.remove('visible');
+            isManSpeaking = false;
+            isWomanSpeaking = false;
+            currentScene = 0;
+        }
+        
+        // 重新开始游戏
+        function restartGame() {
+            doorButton.removeEventListener('click', restartGame);
+            doorButton.textContent = '开门';
+            resetGame();
+            sceneOne();
+        }
+        
+        // 点击按钮的处理函数
+        doorButton.addEventListener('click', () => {
+            // 只在第一幕响应点击
+            if (currentScene === 0) {
+                sceneTwo();
+            }
+        });
+        
+        // 页面加载完成后开始游戏
+        window.addEventListener('load', startGame);
+    </script>
+</body>
+</html>

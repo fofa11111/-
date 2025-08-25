@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的专属网站</title>
+    <link rel="stylesheet" href="/my-website-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">我的专属网站</div>
+            <ul class="nav-links">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#about">关于我</a></li>
+                <li><a href="#portfolio">作品集</a></li>
+                <li><a href="#contact">联系我</a></li>
+            </ul>
+            <div class="burger">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
+            </div>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>欢迎来到我的专属网站</h1>
+            <p>很高兴认识你！这是一个展示我的教研工作和创意课程案例的地方</p>
+            <a href="#portfolio" class="btn">查看我的作品</a>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <h2>关于我</h2>
+            <div class="about-content">
+                <div class="about-img">
+                    <img src="/images/funny-avatar.svg" alt="我的搞怪头像">
+                </div>
+                <div class="about-text">
+                    <p>你好！我是杨迪，一个充满激情的教研工作者。我热爱思考有趣的课程案例，并喜欢在这个网站上分享我的教学心得和创意。</p>
+                    <p>通过这个专属网站，我希望能够展示我的创造力和技能，同时也能与更多志同道合的人交流和学习。</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-weixin"></i></a>
+                        <a href="#"><i class="fab fa-weibo"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="portfolio" class="portfolio">
+        <div class="container">
+            <h2>我的作品集</h2>
+            <div class="portfolio-items">
+                <div class="portfolio-item">
+                    <img src="/images/pizza.svg" alt="作品1">
+                    <div class="portfolio-info">
+                        <h3>项目名称1</h3>
+                        <p>项目描述1</p>
+                        <a href="project1.html" class="btn">查看详情</a>
+                    </div>
+                </div>
+                <div class="portfolio-item">
+                    <img src="/images/hamburger.svg" alt="作品2">
+                    <div class="portfolio-info">
+                        <h3>项目名称2</h3>
+                        <p>项目描述2</p>
+                        <a href="project2.html" class="btn">查看详情</a>
+                    </div>
+                </div>
+                <div class="portfolio-item">
+                    <img src="/images/hotpot.svg" alt="作品3">
+                    <div class="portfolio-info">
+                        <h3>项目名称3</h3>
+                        <p>项目描述3</p>
+                        <a href="project3.html" class="btn">查看详情</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>联系我</h2>
+            <div class="contact-content">
+                <div class="contact-form">
+                    <form>
+                        <input type="text" placeholder="你的名字" required>
+                        <input type="email" placeholder="你的邮箱" required>
+                        <textarea placeholder="你的留言" required></textarea>
+                        <button type="submit" class="btn">发送留言</button>
+                    </form>
+                </div>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <p>邮箱: 1303995842@qq.com</p>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <p>电话: 13000000000</p>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <p>地址: 北京市海淀区银科大厦</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 我的专属网站. 保留所有权利.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-weixin"></i></a>
+                <a href="#"><i class="fab fa-weibo"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/my-website-script.js"></script>
+      <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+      <script src="https://unpkg.com/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+      <script src="/threejs-scene.js"></script>
+</body>
+</html>

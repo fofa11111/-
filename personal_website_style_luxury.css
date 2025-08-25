@@ -1,0 +1,756 @@
+/* 轻奢风全局样式 */
+:root {
+    --primary-color: #e6b800;
+    --secondary-color: #f5f0e6;
+    --accent-color: #8b7355;
+    --text-color: #333333;
+    --text-light: #666666;
+    --bg-light: #ffffff;
+    --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--bg-light);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* 展厅样式 - 轻奢风 */
+.exhibition-hall {
+    background-color: var(--secondary-color);
+    padding: 4rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.exhibition-hall::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+    z-index: 1;
+}
+
+.exhibition-hall .container {
+    position: relative;
+    z-index: 2;
+}
+
+.exhibition-hall h2 {
+    text-align: center;
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
+    color: var(--accent-color);
+    letter-spacing: 2px;
+    position: relative;
+}
+
+.exhibition-hall h2::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 3px;
+    background-color: var(--primary-color);
+    margin: 1rem auto 0;
+}
+
+#exhibition-container {
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    background-color: var(--bg-light);
+}
+
+/* 头部样式 - 轻奢风 */
+header {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: var(--text-color);
+    padding: 1.5rem 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo h1 {
+    font-size: 1.8rem;
+    color: var(--accent-color);
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+}
+
+.nav-links li {
+    margin-left: 2.5rem;
+}
+
+.nav-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+    position: relative;
+    padding: 0.5rem 0;
+    transition: var(--transition);
+    letter-spacing: 0.5px;
+}
+
+.nav-links a:hover {
+    color: var(--primary-color);
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--primary-color);
+    transition: var(--transition);
+}
+
+.nav-links a:hover::after {
+    width: 100%;
+}
+
+.hamburger {
+    display: none;
+    cursor: pointer;
+    color: var(--accent-color);
+    font-size: 1.5rem;
+}
+
+/* 英雄区域样式 - 轻奢风 */
+.hero {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--secondary-color);
+    text-align: center;
+    padding: 0 20px;
+    margin-top: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 60%);
+}
+
+.hero-container {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+}
+
+.hero-content h2 {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--accent-color);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 1px;
+}
+
+.hero-content p {
+    font-size: 1.3rem;
+    margin-bottom: 2.5rem;
+    color: var(--text-light);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: var(--bg-light);
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(230, 184, 0, 0.3);
+}
+
+.btn:hover {
+    background-color: #cc9900;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(230, 184, 0, 0.4);
+}
+
+/* 关于我区域样式 - 轻奢风 */
+.about {
+    padding: 8rem 0;
+    background-color: var(--bg-light);
+}
+
+.about-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3rem;
+}
+
+.about-image {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+}
+
+.about-image::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    top: 20px;
+    left: 20px;
+    z-index: -1;
+}
+
+.about-image img {
+    max-width: 100%;
+    border-radius: 50%;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.about-image:hover img {
+    transform: scale(1.02);
+}
+
+.about-content {
+    flex: 1;
+    min-width: 300px;
+    padding: 2rem;
+    background-color: var(--secondary-color);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.about-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(230, 184, 0, 0.1);
+    border-radius: 0 0 0 100px;
+}
+
+.about-content h2 {
+    font-size: 2.3rem;
+    margin-bottom: 1.5rem;
+    color: var(--accent-color);
+    position: relative;
+    display: inline-block;
+}
+
+.about-content h2::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background-color: var(--primary-color);
+    margin-top: 0.5rem;
+}
+
+.about-content p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-light);
+    line-height: 1.8;
+}
+
+/* 作品集区域样式 - 轻奢风 */
+.portfolio {
+    padding: 8rem 0;
+    background-color: var(--secondary-color);
+    text-align: center;
+}
+
+.portfolio h2 {
+    font-size: 2.3rem;
+    margin-bottom: 3rem;
+    color: var(--accent-color);
+    position: relative;
+    display: inline-block;
+}
+
+.portfolio h2::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background-color: var(--primary-color);
+    margin: 0.5rem auto 0;
+}
+
+.portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+}
+
+.portfolio-item {
+    background-color: var(--bg-light);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    position: relative;
+}
+
+.portfolio-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.portfolio-item img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    transition: var(--transition);
+}
+
+.portfolio-item:hover img {
+    transform: scale(1.05);
+}
+
+.portfolio-info {
+    padding: 2rem;
+    position: relative;
+}
+
+.portfolio-info h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.8rem;
+    color: var(--accent-color);
+    transition: var(--transition);
+}
+
+.portfolio-item:hover .portfolio-info h3 {
+    color: var(--primary-color);
+}
+
+.portfolio-info p {
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+.portfolio-item a {
+    text-decoration: none;
+    display: block;
+    height: 100%;
+}
+
+/* 技能区域样式 - 轻奢风 */
+.skills {
+    padding: 8rem 0;
+    background-color: var(--bg-light);
+}
+
+.skills h2 {
+    font-size: 2.3rem;
+    margin-bottom: 3rem;
+    text-align: center;
+    color: var(--accent-color);
+    position: relative;
+    display: inline-block;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.skills h2::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background-color: var(--primary-color);
+    margin: 0.5rem auto 0;
+}
+
+.skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2.5rem;
+}
+
+.skill-category {
+    flex: 1;
+    min-width: 300px;
+    background-color: var(--secondary-color);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.skill-category::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background-color: var(--primary-color);
+}
+
+.skill-category h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--accent-color);
+    padding-left: 1rem;
+}
+
+.skill-category ul {
+    list-style: none;
+    padding-left: 1rem;
+}
+
+.skill-category li {
+    margin-bottom: 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.skill-name {
+    font-weight: 500;
+    color: var(--text-color);
+    letter-spacing: 0.5px;
+}
+
+.skill-level {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+/* 证书区域样式 - 轻奢风 */
+.certificates {
+    padding: 8rem 0;
+    background-color: var(--secondary-color);
+    text-align: center;
+}
+
+.certificates h2 {
+    font-size: 2.3rem;
+    margin-bottom: 2rem;
+    color: var(--accent-color);
+    position: relative;
+    display: inline-block;
+}
+
+.certificates h2::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background-color: var(--primary-color);
+    margin: 0.5rem auto 0;
+}
+
+.certificates p {
+    color: var(--text-light);
+    font-size: 1.1rem;
+}
+
+/* 联系我区域样式 - 轻奢风 */
+.contact {
+    padding: 8rem 0;
+    background-color: var(--bg-light);
+}
+
+.contact h2 {
+    font-size: 2.3rem;
+    margin-bottom: 3rem;
+    text-align: center;
+    color: var(--accent-color);
+    position: relative;
+    display: inline-block;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.contact h2::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background-color: var(--primary-color);
+    margin: 0.5rem auto 0;
+}
+
+.contact-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2.5rem;
+}
+
+.contact-info {
+    flex: 1;
+    min-width: 300px;
+    padding: 2rem;
+    background-color: var(--secondary-color);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+}
+
+.contact-info p {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.contact-info i {
+    color: var(--primary-color);
+    font-size: 1.3rem;
+}
+
+.contact-form {
+    flex: 1;
+    min-width: 300px;
+    padding: 2rem;
+    background-color: var(--secondary-color);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--bg-light);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: var(--transition);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(230, 184, 0, 0.2);
+}
+
+.contact-form button {
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+/* 页脚样式 - 轻奢风 */
+footer {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    padding: 3rem 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), transparent, var(--primary-color));
+}
+
+.social-links {
+    margin-bottom: 1.5rem;
+}
+
+.social-links a {
+    color: var(--accent-color);
+    font-size: 1.8rem;
+    margin: 0 1rem;
+    text-decoration: none;
+    transition: var(--transition);
+    display: inline-block;
+}
+
+.social-links a:hover {
+    color: var(--primary-color);
+    transform: translateY(-5px);
+}
+
+footer p {
+    color: var(--text-light);
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+}
+
+/* 响应式样式 */
+@media (max-width: 992px) {
+    .hero-content h2 {
+        font-size: 3rem;
+    }
+    
+    .about-container,
+    .contact-container {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.98);
+        flex-direction: column;
+        padding: 1rem 0;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .nav-links.active {
+        display: flex;
+    }
+    
+    .nav-links li {
+        margin: 0.5rem 0;
+        text-align: center;
+    }
+    
+    .hamburger {
+        display: block;
+    }
+    
+    .hero-content h2 {
+        font-size: 2.5rem;
+    }
+    
+    .portfolio-grid,
+    .skills-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .logo h1 {
+        font-size: 1.5rem;
+    }
+    
+    .hero-content h2 {
+        font-size: 2rem;
+    }
+    
+    .hero-content p {
+        font-size: 1.1rem;
+    }
+    
+    .about-content,
+    .skill-category,
+    .contact-info,
+    .contact-form {
+        padding: 1.5rem;
+    }
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 页面滚动动画 */
+.exhibition-hall,
+.hero,
+.about,
+.portfolio,
+.skills,
+.certificates,
+.contact {
+    animation: fadeInUp 0.8s ease forwards;
+    opacity: 0;
+}
+
+.exhibition-hall {
+    animation-delay: 0.1s;
+}
+
+.hero {
+    animation-delay: 0.2s;
+}
+
+.about {
+    animation-delay: 0.3s;
+}
+
+.portfolio {
+    animation-delay: 0.4s;
+}
+
+.skills {
+    animation-delay: 0.5s;
+}
+
+.certificates {
+    animation-delay: 0.6s;
+}
+
+.contact {
+    animation-delay: 0.7s;
+}

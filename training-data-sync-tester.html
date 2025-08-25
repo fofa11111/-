@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>训练数据同步测试工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .panel {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .panel h2 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        pre {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .btn-warning {
+            background-color: #ff9800;
+        }
+        .btn-warning:hover {
+            background-color: #e68900;
+        }
+        .btn-danger {
+            background-color: #f44336;
+        }
+        .btn-danger:hover {
+            background-color: #da190b;
+        }
+        .info {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>训练数据同步测试工具</h1>
+    
+    <div class="info">
+        <strong>重要提示：</strong>这个工具帮助您测试annotation-tool.html和probability-demo.html之间的localStorage数据同步功能。
+        请确保两个页面都已经更新了最新代码。
+    </div>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>当前localStorage状态</h2>
+            <div>
+                <button onclick="checkLocalStorage()">检查localStorage数据</button>
+                <button onclick="startMonitoring()" class="btn-warning">开始实时监控</button>
+                <button onclick="stopMonitoring()" class="btn-danger">停止监控</button>
+            </div>
+            <div id="storage-status" class="info">
+                点击上方按钮检查数据...
+            </div>
+            <div id="training-data-display">
+                <h3>训练数据内容：</h3>
+                <pre id="training-data-content">尚未加载数据</pre>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>测试操作</h2>
+            <button onclick="setSampleData()">设置示例数据</button>
+            <button onclick="clearTrainingData()" class="btn-warning">清空训练数据</button>
+            <button onclick="addDogRockData()">添加dog-rock测试数据</button>
+            <div id="test-result" class="info">
+                选择一个测试操作...
+            </div>
+            <div class="info">
+                <p><strong>测试步骤建议：</strong></p>
+                <ol>
+                    <li>打开annotation-tool.html和probability-demo.html</li>
+                    <li>在此页面点击"开始实时监控"</li>
+                    <li>在另一个页面进行操作（如添加标注、修改滑块）</li>
+                    <li>观察此页面的数据是否实时更新</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    
+    <h2>调试日志</h2>
+    <pre id="debug-log">准备就绪...</pre>
+    
+    <script>
+        const LOCAL_STORAGE_KEY = 'sharedTrainingData';
+        let monitoringInterval = null;
+        let logCount = 0;
+        
+        // 日志函数
+        function log(message) {
+            const logElement = document.getElementById('debug-log');
+            logCount++;
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // 清空日志
+        function clearLog() {
+            document.getElementById('debug-log').textContent = '';
+            logCount = 0;
+        }
+        
+        // 检查localStorage数据
+        function checkLocalStorage() {
+            try {
+                log('开始检查localStorage数据...');
+                
+                // 检查键是否存在
+                const exists = localStorage.getItem(LOCAL_STORAGE_KEY) !== null;
+                const statusElement = document.getElementById('storage-status');
+                
+                if (exists) {
+                    const data = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+                    const dataSize = new Blob([localStorage.getItem(LOCAL_STORAGE_KEY)]).size;
+                    
+                    statusElement.className = 'success';
+                    statusElement.textContent = `✅ 数据存在！键名: ${LOCAL_STORAGE_KEY}, 数据大小: ${dataSize} 字节`;
+                    
+                    document.getElementById('training-data-content').textContent = JSON.stringify(data, null, 2);
+                    
+                    // 检查dog-rock特殊条件
+                    const dogRockCount = data['dog'] && data['dog']['rock'] ? data['dog']['rock'] : 0;
+                    if (dogRockCount >= 5) {
+                        log(`特别注意: dog类别中的石头图片数量已达到${dogRockCount}张`);
+                    }
+                } else {
+                    statusElement.className = 'error';
+                    statusElement.textContent = `❌ 未找到数据！键名: ${LOCAL_STORAGE_KEY}不存在于localStorage中`;
+                    document.getElementById('training-data-content').textContent = '无数据';
+                }
+                
+                log(`检查完成，localStorage中${exists ? '存在' : '不存在'}训练数据`);
+            } catch (error) {
+                log(`检查数据时出错: ${error.message}`);
+                const statusElement = document.getElementById('storage-status');
+                statusElement.className = 'error';
+                statusElement.textContent = `❌ 检查数据时出错: ${error.message}`;
+            }
+        }
+        
+        // 开始实时监控
+        function startMonitoring() {
+            if (monitoringInterval) {
+                log('监控已经在运行中');
+                return;
+            }
+            
+            log('开始每秒监控localStorage更新...');
+            
+            // 存储当前数据的哈希值用于比较
+            let currentDataHash = JSON.stringify(localStorage.getItem(LOCAL_STORAGE_KEY));
+            
+            monitoringInterval = setInterval(() => {
+                try {
+                    const newDataHash = JSON.stringify(localStorage.getItem(LOCAL_STORAGE_KEY));
+                    
+                    // 如果数据发生变化
+                    if (newDataHash !== currentDataHash) {
+                        currentDataHash = newDataHash;
+                        log('检测到localStorage数据变化！');
+                        checkLocalStorage();
+                    }
+                } catch (error) {
+                    log(`监控过程中出错: ${error.message}`);
+                }
+            }, 1000);
+        }
+        
+        // 停止监控
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                log('已停止localStorage监控');
+            } else {
+                log('监控未运行');
+            }
+        }
+        
+        // 设置示例数据
+        function setSampleData() {
+            try {
+                const sampleData = {
+                    'rock': { 'rock': 3, 'barrier': 1, 'dog': 1, 'grandma': 0, 'plastic-bag': 0 },
+                    'barrier': { 'rock': 1, 'barrier': 3, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 },
+                    'dog': { 'rock': 2, 'barrier': 0, 'dog': 3, 'grandma': 1, 'plastic-bag': 0 },
+                    'grandma': { 'rock': 0, 'barrier': 0, 'dog': 1, 'grandma': 3, 'plastic-bag': 0 },
+                    'plastic-bag': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 2 }
+                };
+                
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sampleData));
+                
+                const resultElement = document.getElementById('test-result');
+                resultElement.className = 'success';
+                resultElement.textContent = '✅ 已设置示例训练数据到localStorage';
+                
+                log('已设置示例训练数据');
+                checkLocalStorage();
+            } catch (error) {
+                log(`设置示例数据时出错: ${error.message}`);
+                const resultElement = document.getElementById('test-result');
+                resultElement.className = 'error';
+                resultElement.textContent = `❌ 设置示例数据时出错: ${error.message}`;
+            }
+        }
+        
+        // 清空训练数据
+        function clearTrainingData() {
+            try {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                
+                const resultElement = document.getElementById('test-result');
+                resultElement.className = 'success';
+                resultElement.textContent = `✅ 已清空localStorage中的${LOCAL_STORAGE_KEY}数据`;
+                
+                log(`已清空localStorage中的${LOCAL_STORAGE_KEY}数据`);
+                checkLocalStorage();
+            } catch (error) {
+                log(`清空数据时出错: ${error.message}`);
+                const resultElement = document.getElementById('test-result');
+                resultElement.className = 'error';
+                resultElement.textContent = `❌ 清空数据时出错: ${error.message}`;
+            }
+        }
+        
+        // 添加dog-rock测试数据
+        function addDogRockData() {
+            try {
+                let trainingData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {
+                    'rock': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 },
+                    'barrier': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 },
+                    'dog': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 },
+                    'grandma': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 },
+                    'plastic-bag': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 }
+                };
+                
+                // 确保dog类别存在
+                if (!trainingData['dog']) {
+                    trainingData['dog'] = { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 };
+                }
+                
+                // 增加dog-rock的数量到5
+                trainingData['dog']['rock'] = 5;
+                
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(trainingData));
+                
+                const resultElement = document.getElementById('test-result');
+                resultElement.className = 'success';
+                resultElement.textContent = '✅ 已添加dog-rock测试数据 (数量: 5)';
+                
+                log('已添加dog-rock测试数据，数量设置为5');
+                checkLocalStorage();
+            } catch (error) {
+                log(`添加dog-rock数据时出错: ${error.message}`);
+                const resultElement = document.getElementById('test-result');
+                resultElement.className = 'error';
+                resultElement.textContent = `❌ 添加dog-rock数据时出错: ${error.message}`;
+            }
+        }
+        
+        // 页面加载时自动检查一次
+        window.addEventListener('load', () => {
+            log('页面已加载，准备检查localStorage数据');
+            checkLocalStorage();
+        });
+        
+        // 清理定时器
+        window.addEventListener('beforeunload', () => {
+            stopMonitoring();
+        });
+    </script>
+</body>
+</html>

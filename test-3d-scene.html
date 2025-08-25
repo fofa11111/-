@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D奖状展厅测试</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        .loading-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-message" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: white; background-color: rgba(0, 0, 0, 0.7); padding: 20px; border-radius: 10px;">加载3D场景中...</div>
+    <div id="debug-info" style="position: fixed; bottom: 20px; left: 20px; color: white; background-color: rgba(0, 0, 0, 0.5); padding: 10px; border-radius: 5px; font-family: monospace;"></div>
+    <div id="orbit-controls-warning" style="display: none; position: fixed; top: 20px; left: 20px; color: yellow; background-color: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 5px;">轨道控制器加载失败，场景将自动旋转。点击场景可暂停/继续旋转。</div>
+
+    <!-- 使用ES模块方式加载Three.js和OrbitControls -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "./OrbitControls.js": "./OrbitControls.js"
+        }
+      }
+    </script>
+
+    <!-- 加载我们修改后的3D场景脚本 -->
+    <script type="module" src="/threejs-scene.js"></script>
+
+    <script>
+        // 监听模块加载错误
+        window.addEventListener('error', (event) => {
+            if (event.error && event.error.message.includes('Failed to resolve module specifier')) {
+                document.getElementById('loading-message').textContent = '模块加载失败，请检查网络连接';
+                console.error('模块加载失败:', event.error);
+            }
+        });
+    </script>
+</body>
+</html>

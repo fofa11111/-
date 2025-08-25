@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小狗图片画廊</title>
+    <link rel="stylesheet" href="/my-website-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .dog-gallery-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            margin-top: 80px;
+        }
+        .gallery-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .gallery-header h1 {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        .gallery-header p {
+            font-size: 1.2rem;
+            color: #666;
+        }
+        .image-filters {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .filter-group label {
+            font-weight: bold;
+            color: #333;
+            min-width: 100px;
+            display: flex;
+            align-items: center;
+        }
+        .filter-group select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        .gallery-item {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        .gallery-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-item-info {
+            padding: 1rem;
+        }
+        .gallery-item-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .gallery-item-description {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .back-to-main {
+            text-align: center;
+            margin-top: 3rem;
+        }
+        .back-btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: #4a6fa5;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+        .back-btn:hover {
+            background: #3a5a8c;
+        }
+        @media (max-width: 768px) {
+            .dog-gallery-container {
+                padding: 1rem;
+            }
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">我的专属网站</div>
+            <ul class="nav-links">
+                <li><a href="my-website.html#home">首页</a></li>
+                <li><a href="my-website.html#about">关于我</a></li>
+                <li><a href="my-website.html#portfolio">作品集</a></li>
+                <li><a href="my-website.html#contact">联系我</a></li>
+            </ul>
+            <div class="burger">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
+            </div>
+        </nav>
+    </header>
+
+    <section class="dog-gallery-container">
+        <div class="gallery-header">
+            <h1><i class="fas fa-dog"></i> 小狗图片画廊</h1>
+            <p>精选来自网络的可爱小狗图片，点击图片可查看大图</p>
+        </div>
+
+        <div class="image-filters">
+            <div class="filter-group">
+                <label for="dog-breed">小狗品种:</label>
+                <select id="dog-breed">
+                    <option value="all">所有品种</option>
+                    <option value="golden">金毛</option>
+                    <option value="corgi">柯基</option>
+                    <option value="husky">哈士奇</option>
+                    <option value="samoyed">萨摩耶</option>
+                    <option value="labrador">拉布拉多</option>
+                    <option value="poodle">贵宾犬</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="image-style">图片风格:</label>
+                <select id="image-style">
+                    <option value="all">所有风格</option>
+                    <option value="cute">可爱</option>
+                    <option value="funny">搞笑</option>
+                    <option value="sleeping">睡觉</option>
+                    <option value="playing">玩耍</option>
+                    <option value="portrait">肖像</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="gallery-grid" class="gallery-grid">
+            <!-- 图片会通过JavaScript动态生成 -->
+        </div>
+
+        <div class="back-to-main">
+            <a href="my-website.html" class="back-btn">返回首页</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 我的专属网站. 保留所有权利.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-weixin"></i></a>
+                <a href="#"><i class="fab fa-weibo"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/my-website-script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const galleryGrid = document.getElementById('gallery-grid');
+            const breedFilter = document.getElementById('dog-breed');
+            const styleFilter = document.getElementById('image-style');
+            
+            // 小狗图片数据 - 使用picsum.photos提供的随机图片
+            const dogImages = [
+                { id: 1, breed: 'golden', style: 'cute', url: 'https://picsum.photos/seed/dog1/800/600', title: '可爱的金毛犬', description: '阳光开朗的金毛，非常友好' },
+                { id: 2, breed: 'corgi', style: 'funny', url: 'https://picsum.photos/seed/dog2/800/600', title: '搞笑的柯基', description: '短腿柯基的搞笑瞬间' },
+                { id: 3, breed: 'husky', style: 'portrait', url: 'https://picsum.photos/seed/dog3/800/600', title: '哈士奇肖像', description: '蓝色眼睛的哈士奇特写' },
+                { id: 4, breed: 'samoyed', style: 'cute', url: 'https://picsum.photos/seed/dog4/800/600', title: '萨摩耶微笑', description: '微笑天使萨摩耶' },
+                { id: 5, breed: 'labrador', style: 'playing', url: 'https://picsum.photos/seed/dog5/800/600', title: '拉布拉多玩耍', description: '活泼好动的拉布拉多在玩耍' },
+                { id: 6, breed: 'poodle', style: 'cute', url: 'https://picsum.photos/seed/dog6/800/600', title: '贵宾犬', description: '聪明可爱的贵宾犬' },
+                { id: 7, breed: 'golden', style: 'sleeping', url: 'https://picsum.photos/seed/dog7/800/600', title: '金毛睡觉', description: '安静睡觉的金毛犬' },
+                { id: 8, breed: 'corgi', style: 'portrait', url: 'https://picsum.photos/seed/dog8/800/600', title: '柯基肖像', description: '萌萌的柯基犬特写' },
+                { id: 9, breed: 'husky', style: 'funny', url: 'https://picsum.photos/seed/dog9/800/600', title: '搞笑哈士奇', description: '哈士奇的搞笑表情' },
+                { id: 10, breed: 'samoyed', style: 'playing', url: 'https://picsum.photos/seed/dog10/800/600', title: '萨摩耶玩耍', description: '在雪地里玩耍的萨摩耶' },
+                { id: 11, breed: 'labrador', style: 'portrait', url: 'https://picsum.photos/seed/dog11/800/600', title: '拉布拉多肖像', description: '温顺的拉布拉多特写' },
+                { id: 12, breed: 'poodle', style: 'funny', url: 'https://picsum.photos/seed/dog12/800/600', title: '搞笑贵宾犬', description: '贵宾犬的搞笑造型' }
+            ];
+            
+            // 渲染图片画廊
+            function renderGallery(filteredImages) {
+                galleryGrid.innerHTML = '';
+                
+                filteredImages.forEach(image => {
+                    const galleryItem = document.createElement('div');
+                    galleryItem.className = 'gallery-item';
+                    galleryItem.innerHTML = `
+                        <img src="${image.url}" alt="${image.title}" class="gallery-image">
+                        <div class="gallery-item-info">
+                            <div class="gallery-item-title">${image.title}</div>
+                            <div class="gallery-item-description">${image.description}</div>
+                        </div>
+                    `;
+                    
+                    // 点击图片打开大图
+                    galleryItem.querySelector('.gallery-image').addEventListener('click', function() {
+                        window.open(image.url, '_blank');
+                    });
+                    
+                    galleryGrid.appendChild(galleryItem);
+                });
+            }
+            
+            // 初始渲染所有图片
+            renderGallery(dogImages);
+            
+            // 筛选功能
+            function applyFilters() {
+                const selectedBreed = breedFilter.value;
+                const selectedStyle = styleFilter.value;
+                
+                const filteredImages = dogImages.filter(image => {
+                    const breedMatch = selectedBreed === 'all' || image.breed === selectedBreed;
+                    const styleMatch = selectedStyle === 'all' || image.style === selectedStyle;
+                    return breedMatch && styleMatch;
+                });
+                
+                renderGallery(filteredImages);
+            }
+            
+            // 添加筛选器事件监听
+            breedFilter.addEventListener('change', applyFilters);
+            styleFilter.addEventListener('change', applyFilters);
+        });
+    </script>
+</body>
+</html>

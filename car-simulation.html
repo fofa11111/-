@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>车辆行驶模拟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* 游戏容器 */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 马路容器 */
+        #road-container {
+            position: absolute;
+            width: 400px;
+            height: 100vh;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            overflow: hidden;
+        }
+        
+        /* 马路 */
+        #road {
+            position: absolute;
+            width: 400px;
+            height: 1000vh;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            background: #333;
+            border-left: 10px solid #666;
+            border-right: 10px solid #666;
+            animation: road-move 40s linear infinite;
+        }
+        
+        /* 马路移动动画 */
+        @keyframes road-move {
+            0% {
+                transform: translateX(-50%) translateY(-900vh);
+            }
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        /* 马路分隔线 */
+        #road::before,
+        #road::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                #fff,
+                #fff 40px,
+                transparent 40px,
+                transparent 100px
+            );
+        }
+        
+        #road::before {
+            left: calc(50% - 5px);
+        }
+        
+        #road::after {
+            left: 50%;
+        }
+        
+
+        
+        /* 车辆 */
+        #car {
+            position: absolute;
+            width: 120px;
+            height: 180px;
+            left: calc(50% - 120px);
+            bottom: 10%;
+            z-index: 10;
+            transition: left 0.3s ease;
+        }
+        
+        #car img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        /* 车道框 */
+        .lane-box {
+            position: absolute;
+            width: 190px;
+            height: 100px;
+            top: 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .lane-box:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 1);
+        }
+        
+        #left-lane-box {
+            left: calc(50% - 210px);
+        }
+        
+        #right-lane-box {
+            left: calc(50% + 20px);
+        }
+        
+        /* 贴纸容器 */
+        #stickers-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+        
+        /* 游戏结束提示 */
+        #game-over { 
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 36px;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.8);
+        }
+        
+        /* 爆炸动画 */
+        @keyframes explode {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(3); opacity: 0.8; }
+            100% { transform: scale(5); opacity: 0; }
+        }
+        
+        .explosion {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,215,0,1) 0%, rgba(255,69,0,1) 50%, rgba(255,0,0,0.8) 100%);
+            border-radius: 50%;
+            animation: explode 1s forwards;
+            z-index: 50;
+        }
+        
+        /* 返回按钮 */
+        #back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 20;
+        }
+        
+        #back-button:hover {
+            background: #45a049;
+        }
+        
+        .sticker {
+            width: 60px;
+            height: 60px;
+            cursor: grab;
+            transition: transform 0.2s ease;
+        }
+        
+        .sticker:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+        
+        .sticker img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        /* 障碍物 */
+        .obstacle {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            z-index: 5;
+            transition: top 0.1s linear;
+        }
+        
+        .obstacle img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        /* 识别框 */
+        .detection-box {
+            position: absolute;
+            border: 2px solid lime;
+            background: rgba(0, 255, 0, 0.2);
+            z-index: 20;
+            pointer-events: none;
+        }
+        
+        /* 高置信度（识别概率≥50%的训练过的类别）样式 */
+        .detection-box.high-confidence {
+            border-color: lime;
+            background: rgba(0, 255, 0, 0.2);
+        }
+        
+        /* 低置信度（概率<50%或未训练的类别）样式 */
+        .detection-box.low-confidence {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+        }
+        
+        /* 闪烁识别框动画 */
+        @keyframes blink-box {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .detection-box.blinking {
+            animation: blink-box 0.1s ease-in-out infinite;
+        }
+        
+        /* 隐藏识别框 */
+        .detection-box.hidden {
+            display: none;
+        }
+        
+        /* 不带标签的识别框 */
+        .detection-box.no-label .recognition-label {
+            display: none;
+        }
+        
+        .recognition-label {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            background-color: rgba(0, 128, 0, 0.9);
+            color: white;
+            padding: 2px 6px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            border-radius: 3px;
+        }
+        
+        /* 返回到首页按钮 */
+        #back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            z-index: 30;
+        }
+        
+        #back-button:hover {
+            background: white;
+            color: #333;
+        }
+        
+        /* 汽车闪光动画 */
+        @keyframes car-flash {
+            0%, 100% { filter: brightness(1); }
+            25%, 75% { filter: brightness(3); }
+            50% { filter: brightness(5); }
+        }
+        
+        .car-flashing {
+            animation: car-flash 0.5s ease-in-out;
+        }
+        
+        /* 车头灯样式 */
+        .headlight {
+            position: absolute;
+            /* 优化车灯形状和大小，使其更像真实车灯 */
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 200, 0);
+            border-radius: 6px;
+            bottom: 150px; /* 调整位置，使其更贴合车模型 */
+            transition: all 0.1s ease;
+            box-shadow: 0 0 0 rgba(255, 255, 200, 0);
+        }
+        
+        .headlight.left {
+            left: 28px; /* 调整左侧车灯位置，使其更贴合车模型 */
+        }
+        
+        .headlight.right {
+            right: 43px; /* 调整右侧车灯位置，使其更贴合车模型 */
+        }
+        
+        .car-flashing .headlight {
+            background: rgba(255, 255, 220, 1); /* 略微调整颜色，使其更接近真实车灯 */
+            box-shadow: 
+                0 0 10px 5px rgba(255, 255, 220, 0.9),
+                0 0 30px 15px rgba(255, 255, 220, 0.6),
+                0 0 60px 25px rgba(255, 255, 220, 0.3); /* 增强发光层次感 */
+            border: 1px solid rgba(255, 255, 255, 0.8); /* 添加边框增强轮廓感 */
+        }
+    </style>
+</head>
+<body>
+        <div id="debug-info" style="position: fixed; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.8); color: white; padding: 10px; z-index: 1000; font-size: 12px;"></div>
+        <div id="game-container">
+            <button id="back-button">返回机器学习页面</button>
+            <div id="game-over">
+                你完蛋了！！！
+                <button id="restart-button" style="margin-top: 20px; padding: 10px 20px; background: white; color: red; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+                    重新开始
+                </button>
+            </div>
+            <!-- 马路容器 -->
+            <div id="road-container">
+                <!-- 马路 -->
+                <div id="road"></div>
+            </div>
+        
+        <!-- 车辆 -->
+        <div id="car">
+            <img src="images/车.png" alt="汽车">
+            <!-- 车头灯 -->
+            <div class="headlight left"></div>
+            <div class="headlight right"></div>
+        </div>
+        
+        <!-- 车道框 -->
+        <div class="lane-box" id="left-lane-box">左车道</div>
+        <div class="lane-box" id="right-lane-box">右车道</div>
+        
+        <!-- 贴纸容器 -->
+        <div id="stickers-container">
+            <div class="sticker" draggable="true" data-type="stone">
+                <img src="images/石头1.png" alt="石头">
+            </div>
+            <div class="sticker" draggable="true" data-type="barrier">
+                <img src="images/路障 1.png" alt="路障">
+            </div>
+            <div class="sticker" draggable="true" data-type="grandma">
+                <img src="images/老奶奶1.png" alt="老奶奶">
+            </div>
+            <div class="sticker" draggable="true" data-type="plastic">
+                <img src="images/塑料袋.png" alt="塑料袋">
+            </div>
+            <div class="sticker" draggable="true" data-type="dog">
+                <img src="images/狗1.png" alt="狗">
+            </div>
+        </div>
+        
+
+        
+        <!-- 重新训练按钮 -->
+        <button id="back-button">重新训练</button>
+    </div>
+
+    <script>
+        // 获取URL参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedRockImagesCount = parseInt(urlParams.get('selectedRockImagesCount')) || 0;
+        const trainedCategoriesJson = urlParams.get('trainedCategories');
+        
+        // 安全地解析JSON，防止解析错误
+        let trainedCategories = [];
+        try {
+            trainedCategories = trainedCategoriesJson ? JSON.parse(decodeURIComponent(trainedCategoriesJson)) : [];
+            console.log('学习过的类别(从URL获取):', trainedCategories);
+        } catch (error) {
+            console.error('解析trainedCategories失败:', error);
+            trainedCategories = [];
+        }
+        
+        // 确保trainedCategories是数组
+        if (!Array.isArray(trainedCategories)) {
+            trainedCategories = [];
+            console.warn('trainedCategories不是数组，已重置为空数组');
+        }
+        
+        // 检查类别是否已训练的函数
+        // 这个函数考虑了多种情况，确保石头能正确被识别为训练过的类别
+        function isCategoryTrained(category) {
+            // 首先检查是否在trainedCategories数组中
+            if (trainedCategories.includes(category)) {
+                console.log(`${category} 在trainedCategories数组中`);
+                updateDebugInfo(`类别 ${category} 在trainedCategories数组中`);
+                return true;
+            }
+            
+            // 对于石头，即使trainedCategories数组中没有，我们也总是认为是训练过的
+            // 这是为了确保用户看到的石头能正确显示为绿色框
+            if (category === 'stone') {
+                // 这里可以基于selectedRockImagesCount做更精细的判断，但为了解决问题，我们简单处理
+                const reason = selectedRockImagesCount > 0 ? `selectedRockImagesCount=${selectedRockImagesCount} > 0` : '默认设置';
+                console.log(`石头被识别为训练过的类别，因为${reason}`);
+                updateDebugInfo(`石头被识别为训练过的类别，因为${reason}`);
+                return true;
+            }
+            
+            console.log(`${category} 未被识别为训练过的类别`);
+            updateDebugInfo(`类别 ${category} 未被识别为训练过的类别`);
+            return false;
+        }
+        
+        // 更新调试信息显示
+        function updateDebugInfo(message) {
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.innerHTML = `
+                调试信息:<br>
+                trainedCategories: ${JSON.stringify(trainedCategories)}<br>
+                selectedRockImagesCount: ${selectedRockImagesCount}<br>
+                最新消息: ${message}<br>
+            `;
+        }
+        
+        // 初始化调试信息
+        updateDebugInfo('游戏初始化完成');
+        
+        // 初始化游戏
+        const gameContainer = document.getElementById('game-container');
+        const car = document.getElementById('car');
+        const road = document.getElementById('road');
+        const leftLaneBox = document.getElementById('left-lane-box');
+        const rightLaneBox = document.getElementById('right-lane-box');
+        const stickers = document.querySelectorAll('.sticker');
+        const backButton = document.getElementById('back-button');
+        const gameOver = document.getElementById('game-over');
+        const restartButton = document.getElementById('restart-button');
+        
+        // 返回按钮点击事件
+        backButton.addEventListener('click', function() {
+            window.location.href = 'annotation-tool.html';
+        });
+        
+        // 重新开始按钮点击事件
+        restartButton.addEventListener('click', function() {
+            window.location.href = 'annotation-tool.html';
+        });
+        
+        // 游戏是否结束
+        let gameEnded = false;
+        
+        // 游戏状态
+        let currentLane = 'left'; // 'left' 或 'right'
+        let obstacles = [];
+        let isChangingLane = false;
+        
+        // 车道位置
+        const lanePositions = {
+            left: 'calc(50% - 120px)',
+            right: 'calc(50% + 0px)'
+        };
+        
+        // 障碍物速度
+        const obstacleSpeed = 5;
+        
+        // 重新训练功能 - 跳转到数据标注页面
+        backButton.addEventListener('click', () => {
+            window.location.href = 'annotation-tool.html';
+        });
+        
+        // 贴纸拖放功能
+        stickers.forEach(sticker => {
+            sticker.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', sticker.dataset.type);
+                sticker.classList.add('dragging');
+            });
+            
+            sticker.addEventListener('dragend', () => {
+                sticker.classList.remove('dragging');
+            });
+        });
+        
+        // 车道框接受拖放
+        [leftLaneBox, rightLaneBox].forEach(laneBox => {
+            laneBox.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                laneBox.style.background = 'rgba(255, 255, 255, 0.3)';
+            });
+            
+            laneBox.addEventListener('dragleave', () => {
+                laneBox.style.background = 'rgba(255, 255, 255, 0.1)';
+            });
+            
+            laneBox.addEventListener('drop', (e) => {
+                e.preventDefault();
+                laneBox.style.background = 'rgba(255, 255, 255, 0.1)';
+                
+                const obstacleType = e.dataTransfer.getData('text/plain');
+                const lane = laneBox.id === 'left-lane-box' ? 'left' : 'right';
+                
+                createObstacle(obstacleType, lane);
+            });
+        });
+        
+        // 更新识别框大小和位置，使其完全框住物体
+        function updateRecognitionBoxes() {
+            obstacles.forEach(obstacle => {
+                if (obstacle.element && obstacle.detectionBox) {
+                    const img = obstacle.element.querySelector('img');
+                    const rect = img.getBoundingClientRect();
+                    const gameRect = gameContainer.getBoundingClientRect();
+                    
+                    obstacle.detectionBox.style.width = rect.width + 'px';
+                    obstacle.detectionBox.style.height = rect.height + 'px';
+                    obstacle.detectionBox.style.left = (rect.left - gameRect.left) + 'px';
+                    obstacle.detectionBox.style.top = (rect.top - gameRect.top) + 'px';
+                }
+            });
+        }
+        
+        // 石头10-18的图像路径数组
+        const rockModels = ['images/石头10.png', 'images/石头11.png', 'images/石头12.png', 'images/石头13.png', 'images/石头14.png', 'images/石头15.png', 'images/石头16.png', 'images/石头17.png', 'images/石头18.png'];
+        
+        // 创建障碍物
+        function createObstacle(type, lane) {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.dataset.type = type;
+            obstacle.dataset.lane = lane;
+            
+            // 设置障碍物图片
+            let imageSrc = '';
+            switch (type) {
+                case 'stone':
+                    // 随机选择石头10-18的建模
+                    const randomRockIndex = Math.floor(Math.random() * rockModels.length);
+                    imageSrc = rockModels[randomRockIndex];
+                    break;
+                case 'barrier':
+                    imageSrc = 'images/路障 1.png';
+                    break;
+                case 'grandma':
+                    imageSrc = 'images/老奶奶1.png';
+                    break;
+                case 'plastic':
+                    imageSrc = 'images/塑料袋.png';
+                    break;
+                case 'dog':
+                    imageSrc = 'images/狗1.png';
+                    break;
+            }
+            
+            obstacle.innerHTML = `<img src="${imageSrc}" alt="${type}">`;
+            
+            // 设置初始位置 - 从画面外顶部进入
+            obstacle.style.left = lane === 'left' ? 'calc(50% - 135px)' : 'calc(50% + 35px)';
+            obstacle.style.top = '-100px'; // 初始位置在画面外顶部
+            
+            // 添加到游戏容器
+            gameContainer.appendChild(obstacle);
+            
+            // 塑料袋特殊处理 - 不创建识别框
+            if (type === 'plastic') {
+                // 存储障碍物信息，不包含检测框
+                obstacles.push({
+                    element: obstacle,
+                    detectionBox: null, // 塑料袋没有检测框
+                    lane: lane,
+                    type: type
+                });
+                return; // 提前返回，跳过识别框创建逻辑
+            }
+            
+            // 其他障碍物创建识别框
+            const detectionBox = document.createElement('div');
+            detectionBox.classList.add('detection-box', 'hidden', 'no-label'); // 初始隐藏且不带标签
+            detectionBox.style.width = '110px';
+            detectionBox.style.height = '110px';
+            detectionBox.style.left = obstacle.style.left;
+            detectionBox.style.top = obstacle.style.top;
+            gameContainer.appendChild(detectionBox);
+            
+            // 添加标签（包含类别和概率）
+            const recognitionLabel = document.createElement('div');
+            recognitionLabel.classList.add('recognition-label');
+            
+            // 根据类型设置标签文本和概率
+            let categoryName = type;
+            if (type === 'stone') categoryName = '石头';
+            else if (type === 'barrier') categoryName = '路障';
+            else if (type === 'dog') categoryName = '狗';
+            else if (type === 'grandma') categoryName = '老奶奶';
+            
+            // 使用全局定义的selectedRockImagesCount，不再重新定义
+            // 全局定义中已经处理了默认值为6的情况
+            // 为了保险起见，我们在这里再次确保它有一个有效值
+            const rockImagesCount = typeof selectedRockImagesCount === 'number' && !isNaN(selectedRockImagesCount) ? selectedRockImagesCount : 6;
+            
+            // 计算概率，根据选择的石头图片数量设置不同的概率范围
+            let probabilityPercent;
+            if (type === 'stone') {
+                // 根据选择的石头图片张数设置概率范围
+                let baseProbability, range;
+                switch(rockImagesCount) {
+                    case 1:
+                        baseProbability = 40;
+                        range = 10;
+                        break;
+                    case 2:
+                        baseProbability = 50;
+                        range = 10;
+                        break;
+                    case 3:
+                        baseProbability = 60;
+                        range = 10;
+                        break;
+                    case 4:
+                        baseProbability = 65;
+                        range = 5;
+                        break;
+                    case 5:
+                        baseProbability = 70;
+                        range = 5;
+                        break;
+                    case 6:
+                        baseProbability = 75;
+                        range = 5;
+                        break;
+                    default:
+                        // 7张及以上，每增加一张，概率基础值增加2%
+                        baseProbability = Math.min(85, 80 + (rockImagesCount - 6) * 2);
+                        range = 5;
+                }
+                probabilityPercent = Math.round(baseProbability + Math.random() * range);
+            } else {
+                // 其他物体保持80%-100%的随机概率
+                probabilityPercent = Math.round((Math.random() * 0.2 + 0.8) * 100);
+            }
+            
+            // 为了调试，添加更多信息到调试面板
+            updateDebugInfo(`创建障碍物: 类型=${type}, 概率=${probabilityPercent}%, selectedRockImagesCount=${selectedRockImagesCount}, rockImagesCount=${rockImagesCount}`);
+            
+            // 添加日志以调试trainedCategories
+            console.log('当前障碍物类型:', type);
+            console.log('trainedCategories数组:', trainedCategories);
+            console.log('selectedRockImagesCount:', selectedRockImagesCount);
+            
+            // 使用新的isCategoryTrained函数检查是否训练过
+            const isTrainedCategory = isCategoryTrained(type);
+            
+            // 根据识别概率和是否训练过设置不同的标签和样式
+            if (isTrainedCategory && probabilityPercent >= 50) {
+                recognitionLabel.textContent = `${categoryName} (${probabilityPercent}%)`;
+                detectionBox.classList.add('high-confidence'); // 添加高置信度样式（绿色框）
+            } else {
+                recognitionLabel.textContent = `无法识别`;
+                detectionBox.classList.add('low-confidence'); // 添加低置信度样式
+            }
+            
+            detectionBox.appendChild(recognitionLabel);
+            
+            // 存储障碍物和识别框信息
+            const obstacleInfo = {
+                element: obstacle,
+                detectionBox: detectionBox,
+                lane: lane,
+                type: type,
+                probability: probabilityPercent, // 存储概率
+                isTrained: isTrainedCategory, // 存储是否训练过
+                createdAt: Date.now() // 记录创建时间，用于控制动画时序
+            };
+            obstacles.push(obstacleInfo);
+            
+            // 实现检测框动画时序
+            // 1. 0.5秒后显示不带标签的闪烁框
+            setTimeout(() => {
+                detectionBox.classList.remove('hidden');
+                detectionBox.classList.add('blinking');
+                
+                // 2. 再过0.5秒后显示带标签的框
+                setTimeout(() => {
+                    detectionBox.classList.remove('blinking', 'no-label');
+                }, 500); // 闪烁0.5秒
+            }, 500); // 延迟0.5秒显示
+        }
+        
+        // 更新障碍物位置
+        function updateObstacles() {
+            obstacles.forEach((obstacle, index) => {
+                // 确保元素存在
+                if (!obstacle.element) {
+                    // 移除无效的障碍物
+                    obstacles.splice(index, 1);
+                    return;
+                }
+                
+                // 安全地获取和计算位置
+                const currentTop = parseInt(obstacle.element.style.top) || 0;
+                // 使用障碍物自己的speed属性，如果没有则使用全局的obstacleSpeed
+                const speed = obstacle.speed !== undefined ? obstacle.speed : obstacleSpeed;
+                const newTop = currentTop + speed;
+                
+                obstacle.element.style.top = `${newTop}px`;
+                
+                // 只有非塑料袋才更新检测框位置
+                if (obstacle.detectionBox) {
+                    obstacle.detectionBox.style.top = `${newTop}px`;
+                }
+                
+                // 检查是否需要删除障碍物（离开屏幕）
+                if (newTop > window.innerHeight + 100) { // 增加一些缓冲区
+                    if (gameContainer.contains(obstacle.element)) {
+                        gameContainer.removeChild(obstacle.element);
+                    }
+                    if (obstacle.detectionBox && gameContainer.contains(obstacle.detectionBox)) {
+                        gameContainer.removeChild(obstacle.detectionBox);
+                    }
+                    obstacles.splice(index, 1);
+                }
+                
+                // 检查碰撞和避障
+                checkCollision(obstacle);
+            });
+        }
+        
+        // 检查碰撞和避障
+        function checkCollision(obstacle) {
+            if (gameEnded) return;
+            
+            const carRect = car.getBoundingClientRect();
+            const obstacleRect = obstacle.element.getBoundingClientRect();
+            
+            // 塑料袋不会有碰撞反应
+            if (obstacle.type === 'plastic') {
+                return;
+            }
+            
+            // 从障碍物信息中获取识别概率和是否训练过
+            const isTrainedCategory = obstacle.isTrained || trainedCategories.includes(obstacle.type);
+            const probabilityPercent = obstacle.probability || 100; // 默认100%概率
+            
+            // 如果不是学习过的类别或者识别概率小于50%并且发生碰撞，游戏结束
+            if ((!isTrainedCategory || probabilityPercent < 50) && 
+                obstacle.lane === currentLane && 
+                obstacleRect.bottom > carRect.top && 
+                obstacleRect.top < carRect.bottom && 
+                obstacleRect.right > carRect.left && 
+                obstacleRect.left < carRect.right) {
+                // 创建爆炸效果
+                createExplosion(carRect.left + carRect.width / 2, carRect.top + carRect.height / 2);
+                
+                // 显示游戏结束提示
+                setTimeout(() => {
+                    gameOver.style.display = 'block';
+                }, 500);
+                
+                // 停止游戏
+                gameEnded = true;
+                return;
+            }
+            
+            // 小狗特殊处理 - 在即将碰到但还有一点距离时触发
+            // 只有训练过的类别或概率≥50%的小狗才执行特殊处理
+            if (obstacle.type === 'dog' && 
+                isTrainedCategory && 
+                probabilityPercent >= 50 && 
+                obstacle.lane === currentLane && 
+                obstacleRect.bottom > carRect.top - 100 && // 提前100像素检测
+                obstacleRect.top < carRect.bottom + 50 &&  // 增加垂直检测范围
+                !isChangingLane) {
+                
+                // 汽车闪光
+                car.classList.add('car-flashing');
+                setTimeout(() => {
+                    car.classList.remove('car-flashing');
+                }, 500);
+                
+                // 小狗立即停止下落
+                obstacle.speed = 0;
+                
+                // 小狗平移并消失
+                const dogElement = obstacle.element;
+                const dogDetectionBox = obstacle.detectionBox;
+                
+                // 确定平移方向（向马路外侧）
+                const direction = currentLane === 'left' ? -1 : 1;
+                
+                // 记录开始时间
+                const startTime = Date.now();
+                const duration = 500; // 0.5秒
+                // 使用getBoundingClientRect()获取实际位置而不是解析calc()
+                const initialLeft = obstacle.element.getBoundingClientRect().left - gameContainer.getBoundingClientRect().left;
+                const totalMovement = direction * 200; // 移动距离
+                
+                // 动画函数
+                function animateDog() {
+                    const currentTime = Date.now() - startTime;
+                    const progress = Math.min(currentTime / duration, 1);
+                    
+                    // 计算新位置
+                    const newLeft = initialLeft + (totalMovement * progress);
+                    dogElement.style.left = `${newLeft}px`;
+                    dogDetectionBox.style.left = `${newLeft}px`;
+                    
+                    // 淡出效果
+                    dogElement.style.opacity = 1 - progress;
+                    dogDetectionBox.style.opacity = 1 - progress;
+                    
+                    // 继续动画或结束
+                    if (progress < 1) {
+                        requestAnimationFrame(animateDog);
+                    } else {
+                        // 移除元素
+                        if (gameContainer.contains(dogElement)) {
+                            gameContainer.removeChild(dogElement);
+                        }
+                        if (gameContainer.contains(dogDetectionBox)) {
+                            gameContainer.removeChild(dogDetectionBox);
+                        }
+                        // 从数组中移除
+                        const index = obstacles.indexOf(obstacle);
+                        if (index > -1) {
+                            obstacles.splice(index, 1);
+                        }
+                    }
+                }
+                
+                // 开始动画
+                requestAnimationFrame(animateDog);
+                
+                // 阻止其他碰撞检测逻辑
+                return;
+            }
+            
+            // 其他障碍物的处理
+            // 只有当不是小狗且是学习过的类别且概率≥50%时才执行自动换道
+            if (obstacle.type !== 'dog' && 
+                isTrainedCategory && 
+                probabilityPercent >= 50 && 
+                obstacle.lane === currentLane && 
+                obstacleRect.bottom > carRect.top - 200 && 
+                obstacleRect.top < carRect.bottom + 100 && 
+                !isChangingLane) {
+                
+                // 自动换道避让
+                changeLane();
+            }
+        }
+        
+        // 改变车道
+        function changeLane() {
+            isChangingLane = true;
+            
+            // 切换到另一个车道
+            currentLane = currentLane === 'left' ? 'right' : 'left';
+            car.style.left = lanePositions[currentLane];
+            
+            // 防止短时间内频繁换道
+            setTimeout(() => {
+                isChangingLane = false;
+            }, 1000);
+        }
+        
+        // 创建爆炸效果
+        function createExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.classList.add('explosion');
+            
+            // 设置爆炸位置（居中）
+            explosion.style.left = `${x - 100}px`; // 100是爆炸半径
+            explosion.style.top = `${y - 100}px`;
+            
+            gameContainer.appendChild(explosion);
+            
+            // 移除汽车
+            car.style.display = 'none';
+            
+            // 移除所有障碍物
+            obstacles.forEach(obstacle => {
+                if (gameContainer.contains(obstacle.element)) {
+                    gameContainer.removeChild(obstacle.element);
+                }
+                if (gameContainer.contains(obstacle.detectionBox)) {
+                    gameContainer.removeChild(obstacle.detectionBox);
+                }
+            });
+            obstacles = [];
+            
+            // 移除爆炸元素
+            setTimeout(() => {
+                if (gameContainer.contains(explosion)) {
+                    gameContainer.removeChild(explosion);
+                }
+            }, 1000);
+        }
+        
+        // 游戏循环
+        function gameLoop() {
+            if (!gameEnded) {
+                updateObstacles();
+                updateRecognitionBoxes();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 开始游戏循环
+        gameLoop();
+        
+        // 键盘控制换道
+        document.addEventListener('keydown', (e) => {
+            if (!isChangingLane) {
+                if (e.key === 'ArrowLeft' && currentLane === 'right') {
+                    changeLane();
+                } else if (e.key === 'ArrowRight' && currentLane === 'left') {
+                    changeLane();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

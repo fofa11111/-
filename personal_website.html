@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的专属网站</title>
+    <link rel="stylesheet" href="personal_website_style_tech.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Three.js 库文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <!-- 注意：VRControls.js 和 VREffect.js 在新版本 Three.js 中已被替换为 WebXR API -->
+</head>
+<body>
+    <!-- VR展厅部分 -->
+    <section id="vr-exhibition" class="vr-exhibition">
+        <div class="container">
+            <h2>VR展厅</h2>
+            <div id="vr-exhibition-container"></div>
+        </div>
+    </section>
+
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <h1>我的专属网站</h1>
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#home">首页</a></li>
+                    <li><a href="#about">关于我</a></li>
+                    <li><a href="#vr-exhibition">VR展厅</a></li>
+                    <li><a href="#portfolio">作品集</a></li>
+                    <li><a href="#skills">技能</a></li>
+                    <li><a href="#contact">联系我</a></li>
+                </ul>
+            </nav>
+            <div class="hamburger">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </header>
+
+    <section id="home" class="hero">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <h2>欢迎来到我的专属网站</h2>
+                <p>这是一个展示我的个人信息、技能和作品的平台。</p>
+                <a href="#about" class="btn">了解更多</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container about-container">
+            <div class="about-image">
+                <img src="images/funny-avatar.svg" alt="个人照片">
+            </div>
+            <div class="about-content">
+                <h2>关于我</h2>
+                <p>你好！我是[你的名字]，一名[你的职业/兴趣]。我热爱[你的爱好/专业领域]，并致力于在这个领域不断学习和成长。</p>
+                <p>这个网站是我展示个人作品和技能的平台，希望能让你更了解我。如果你有任何问题或合作意向，欢迎随时联系我。</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="portfolio" class="portfolio">
+        <div class="container">
+            <h2>我的作品集</h2>
+            <div class="portfolio-grid">
+                <div class="portfolio-item">
+                    <a href="project1.html">
+                        <img src="images/bbq.svg" alt="项目1">
+                        <div class="portfolio-info">
+                            <h3>项目名称1</h3>
+                            <p>项目描述1</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="portfolio-item">
+                    <a href="project2.html">
+                        <img src="images/hamburger.svg" alt="项目2">
+                        <div class="portfolio-info">
+                            <h3>AI绘画小游戏</h3>
+                            <p>输入你的创意，让AI为你绘制作品</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="portfolio-item">
+                    <a href="project3.html">
+                        <img src="images/pizza.svg" alt="项目3">
+                        <div class="portfolio-info">
+                            <h3>项目名称3</h3>
+                            <p>项目描述3</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="skills" class="skills">
+        <div class="container">
+            <h2>我的技能</h2>
+            <div class="skills-container">
+                <div class="skill-category">
+                    <h3>专业技能</h3>
+                    <ul>
+                        <li><span class="skill-name">技能1</span><span class="skill-level">★★★★★</span></li>
+                        <li><span class="skill-name">技能2</span><span class="skill-level">★★★★☆</span></li>
+                        <li><span class="skill-name">技能3</span><span class="skill-level">★★★☆☆</span></li>
+                    </ul>
+                </div>
+                <div class="skill-category">
+                    <h3>兴趣爱好</h3>
+                    <ul>
+                        <li><span class="skill-name">爱好1</span><span class="skill-level">★★★★★</span></li>
+                        <li><span class="skill-name">爱好2</span><span class="skill-level">★★★★☆</span></li>
+                        <li><span class="skill-name">爱好3</span><span class="skill-level">★★★☆☆</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="certificates" class="certificates">
+        <div class="container">
+            <h2>我的证书</h2>
+            <p>证书展示内容移至展厅中</p>
+        </div>
+    </section>
+
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>联系我</h2>
+            <div class="contact-container">
+                <div class="contact-info">
+                    <p><i class="fas fa-envelope"></i> email@example.com</p>
+                    <p><i class="fas fa-phone"></i> 123-456-7890</p>
+                    <p><i class="fas fa-map-marker-alt"></i> 城市, 国家</p>
+                </div>
+                <div class="contact-form">
+                    <form>
+                        <input type="text" placeholder="你的名字">
+                        <input type="email" placeholder="你的邮箱">
+                        <textarea placeholder="你的消息"></textarea>
+                        <button type="submit" class="btn">发送消息</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container footer-container">
+            <div class="social-links">
+                <a href="#"><i class="fab fa-weixin"></i></a>
+                <a href="#"><i class="fab fa-weibo"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+            <p>&copy; 2023 我的专属网站. 保留所有权利.</p>
+        </div>
+    </footer>
+
+
+    <script src="personal_website_vr_exhibition.js"></script>
+    <script src="ai_navigation_assistant.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>如何直接使用您的图片 - 简易指南</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .step {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Monaco, Consolas, monospace;
+        }
+        .note {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>如何直接使用您的图片</h1>
+    
+    <div class="step">
+        <h2>步骤 1: 将图片保存到项目中</h2>
+        <p>请将您的猫咪图片保存到以下文件夹：</p>
+        <pre>/Users/hetao/Desktop/traaaaaa/images</pre>
+        <p>确保图片文件名不包含中文或特殊字符，例如：<code>my-cat-image.png</code> 或 <code>original-cat.jpg</code></p>
+    </div>
+    
+    <div class="step">
+        <h2>步骤 2: 修改代码引用</h2>
+        <p>打开 <code>ai_navigation_assistant.js</code> 文件，找到以下代码：</p>
+        <pre>// 使用与提供图片完全一致的猫咪SVG文件
+aiAvatar.innerHTML = `&lt;img src="images/perfect-match-cat.svg" alt="指定猫咪形象" width="120" height="120"&gt;`;</pre>
+        <p>将 <code>images/perfect-match-cat.svg</code> 替换为您的图片文件名，例如：</p>
+        <pre>// 使用您上传的原始图片
+aiAvatar.innerHTML = `&lt;img src="images/my-cat-image.png" alt="指定猫咪形象" width="120" height="120"&gt;`;</pre>
+    </div>
+    
+    <div class="step">
+        <h2>步骤 3: 刷新页面查看效果</h2>
+        <p>保存文件后，刷新 <code>personal_website.html</code> 页面，您应该能看到您的图片已经替换了原来的猫咪形象。</p>
+    </div>
+    
+    <div class="note">
+        <p><strong>提示：</strong>如果您需要我帮助修改代码，请将图片上传到指定目录后，告诉我图片的确切文件名，我会立即帮您修改代码引用。</p>
+    </div>
+</body>
+</html>

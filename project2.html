@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI绘画小游戏</title>
+    <link rel="stylesheet" href="/my-website-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .ai-drawing-game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .ai-drawing-game-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .ai-drawing-controls {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .ai-drawing-controls label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .ai-drawing-controls textarea {
+            width: 100%;
+            height: 120px;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            resize: vertical;
+            font-family: 'Arial', sans-serif;
+        }
+        .style-selector {
+            margin-bottom: 1.5rem;
+        }
+        .style-selector h4 {
+            margin-bottom: 0.8rem;
+            color: #333;
+        }
+        .style-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+        .style-option {
+            padding: 0.5rem 1rem;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .style-option:hover,
+        .style-option.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        .generate-btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 1rem;
+        }
+        .generate-btn:hover {
+            background: #2980b9;
+        }
+        .generate-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: inline-block;
+            margin-left: 0.8rem;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .ai-drawing-result {
+            margin-top: 2rem;
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .result-image-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .result-image {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .history-section {
+            margin-top: 3rem;
+        }
+        .history-title {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        .history-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .history-item {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .history-item:hover {
+            transform: scale(1.03);
+        }
+        .history-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.8rem 1.5rem;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+        .back-btn:hover {
+            background: #2980b9;
+        }
+        @media (max-width: 768px) {
+            .ai-drawing-game-container {
+                padding: 1rem;
+            }
+            .style-options {
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">我的专属网站</div>
+            <ul class="nav-links">
+                <li><a href="my-website.html#home">首页</a></li>
+                <li><a href="my-website.html#about">关于我</a></li>
+                <li><a href="my-website.html#portfolio">作品集</a></li>
+                <li><a href="my-website.html#contact">联系我</a></li>
+            </ul>
+            <div class="burger">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
+            </div>
+        </nav>
+    </header>
+
+    <section class="ai-drawing-game-container">
+        <div class="ai-drawing-game-header">
+            <h1>AI绘画小游戏</h1>
+            <p>输入你的创意，让AI为你绘制作品</p>
+        </div>
+
+        <div class="ai-drawing-controls">
+            <div class="api-key-info" style="background-color: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; border-left: 4px solid #3498db;">
+                <p style="margin: 0;"><strong>提示:</strong> 本AI绘画功能需要使用火山引擎的图像生成API。您需要输入自己的火山引擎API密钥和应用ID才能使用。</p>
+            </div>
+            <label for="description">请描述你想要的画面：</label>
+            <textarea id="description" placeholder="例如：一只可爱的小猫在草地上玩耍，阳光明媚，风格：卡通..."></textarea>
+
+            <div class="style-selector">
+                <h4>选择艺术风格：</h4>
+                <div class="style-options">
+                    <div class="style-option active" data-style="cartoon">卡通</div>
+                    <div class="style-option" data-style="realistic">写实</div>
+                    <div class="style-option" data-style="watercolor">水彩</div>
+                    <div class="style-option" data-style="oil">油画</div>
+                    <div class="style-option" data-style="anime">动漫</div>
+                    <div class="style-option" data-style="pixel">像素</div>
+                </div>
+            </div>
+
+            <button id="generate-btn" class="generate-btn">
+                生成画作
+                <span id="loading-indicator" class="loading" style="display: none;"></span>
+            </button>
+        </div>
+
+        <div id="ai-drawing-result" class="ai-drawing-result" style="display: none;">
+            <h3>生成结果：</h3>
+            <div class="result-image-container">
+                <img id="result-image" class="result-image" src="" alt="AI生成的绘画">
+            </div>
+            <p id="result-description"></p>
+        </div>
+
+        <div class="history-section">
+            <h3 class="history-title">历史作品：</h3>
+            <div id="history-gallery" class="history-gallery">
+                <!-- 历史作品会在这里动态生成 -->
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="my-website.html#portfolio" class="back-btn">返回作品集</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 我的专属网站. 保留所有权利.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-weixin"></i></a>
+                <a href="#"><i class="fab fa-weibo"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/my-website-script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generate-btn');
+            const descriptionInput = document.getElementById('description');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const resultSection = document.getElementById('ai-drawing-result');
+            const resultImage = document.getElementById('result-image');
+            const resultDescription = document.getElementById('result-description');
+            const historyGallery = document.getElementById('history-gallery');
+            const styleOptions = document.querySelectorAll('.style-option');
+            let selectedStyle = 'cartoon';
+
+            // 选择艺术风格
+            styleOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    styleOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedStyle = this.dataset.style;
+                });
+            });
+
+            // 添加火山引擎API密钥和应用ID输入区域
+            const apiKeyContainer = document.createElement('div');
+            apiKeyContainer.className = 'api-key-container';
+            apiKeyContainer.innerHTML = `
+                <label for="api-key">火山引擎API 密钥 (获取: <a href="https://console.volcengine.com/iam/keymanage/" target="_blank">https://console.volcengine.com/iam/keymanage/</a>):</label>
+                <input type="password" id="api-key" placeholder="AKLT..." style="width: 100%; padding: 0.8rem; margin-bottom: 1.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                <label for="app-id">火山引擎应用ID (获取: <a href="https://console.volcengine.com/ai/dashscope/overview/" target="_blank">https://console.volcengine.com/ai/dashscope/overview/</a>):</label>
+                <input type="text" id="app-id" placeholder="您的应用ID" style="width: 100%; padding: 0.8rem; margin-bottom: 1.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem;">注意: 本项目仅在客户端临时存储您的API密钥和应用ID，不会上传或分享。</p>
+            `;
+            const controls = document.querySelector('.ai-drawing-controls');
+            controls.insertBefore(apiKeyContainer, controls.firstChild);
+            const apiKeyInput = document.getElementById('api-key');
+            const appIdInput = document.getElementById('app-id');
+
+            // 生成按钮点击事件
+            generateBtn.addEventListener('click', function() {
+                const apiKey = apiKeyInput.value.trim();
+                const appId = appIdInput.value.trim();
+                const description = descriptionInput.value.trim();
+                if (!apiKey) {
+                    alert('请输入火山引擎API密钥');
+                    return;
+                }
+                if (!appId) {
+                    alert('请输入火山引擎应用ID');
+                    return;
+                }
+                if (!description) {
+                    alert('请输入画面描述');
+                    return;
+                }
+
+                // 显示加载状态
+                generateBtn.disabled = true;
+                loadingIndicator.style.display = 'inline-block';
+                resultSection.style.display = 'none';
+
+                // 调用火山引擎图像生成API
+                // 注意：火山引擎API要求将ak和sk通过签名算法添加到请求头中
+                // 这里简化处理，实际使用时需要实现完整的签名算法
+                const timestamp = new Date().getTime().toString();
+                const signature = '简化版签名'; // 实际使用时需要根据火山引擎文档实现签名算法
+
+                axios.post(
+                    'https://open.bigmodel.cn/api/paas/v3/model-api/ernie-vilg-v2/generate',
+                    {
+                        model: 'ernie-vilg-v2',
+                        prompt: `${description} (风格: ${selectedStyle})`,
+                        n: 1,
+                        size: '1024x1024',
+                        app_id: appId
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`,
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    }
+                )
+                .then(response => {
+                    // 获取生成的图像URL
+                    // 注意：火山引擎API的返回格式可能与OpenAI不同，需要根据实际情况调整
+                    const imageUrl = response.data.data?.[0]?.url || '';
+                    if (!imageUrl) {
+                        throw new Error('未能获取生成的图像URL');
+                    }
+
+                    // 更新结果区域
+                    resultImage.src = imageUrl;
+                    resultImage.alt = description;
+                    resultDescription.textContent = `描述: ${description} | 风格: ${selectedStyle}`;
+                    resultSection.style.display = 'block';
+
+                    // 添加到历史记录
+                    addToHistory(imageUrl, description, selectedStyle);
+                })
+                .catch(error => {
+                    console.error('生成图像失败:', error);
+                    alert('生成图像失败: ' + (error.response?.data?.error?.message || '未知错误'));
+                })
+                .finally(() => {
+                    // 重置加载状态
+                    generateBtn.disabled = false;
+                    loadingIndicator.style.display = 'none';
+                });
+            });
+
+            // 添加到历史记录
+            function addToHistory(imageUrl, description, style) {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <img src="${imageUrl}" alt="${description}" class="history-image">
+                `;
+                historyItem.addEventListener('click', function() {
+                    resultImage.src = imageUrl;
+                    resultImage.alt = description;
+                    resultDescription.textContent = `描述: ${description} | 风格: ${style}`;
+                    resultSection.style.display = 'block';
+                    // 滚动到结果区域
+                    resultSection.scrollIntoView({ behavior: 'smooth' });
+                });
+                historyGallery.prepend(historyItem);
+
+                // 限制历史记录数量为6个
+                if (historyGallery.children.length > 6) {
+                    historyGallery.removeChild(historyGallery.lastChild);
+                }
+            }
+
+            // 初始化一些历史记录示例
+            const initialHistory = [
+                {
+                    url: 'https://picsum.photos/800/600?random=101',
+                    desc: '一只在太空漂浮的猫',
+                    style: 'cartoon'
+                },
+                {
+                    url: 'https://picsum.photos/800/600?random=102',
+                    desc: '未来城市夜景',
+                    style: 'realistic'
+                },
+                {
+                    url: 'https://picsum.photos/800/600?random=103',
+                    desc: '山水风景',
+                    style: 'watercolor'
+                }
+            ];
+
+            initialHistory.forEach(item => {
+                addToHistory(item.url, item.desc, item.style);
+            });
+        });
+    </script>
+</body>
+</html>

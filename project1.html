@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目名称1 - 详情</title>
+    <link rel="stylesheet" href="/my-website-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .project-detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .project-detail-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .project-detail-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+        .project-detail-image {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .project-detail-info h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        .project-detail-info p {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        .project-features {
+            list-style-type: none;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+        .project-features li {
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+        }
+        .project-features li i {
+            color: #3498db;
+            margin-right: 0.8rem;
+        }
+        .back-btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+        .back-btn:hover {
+            background: #2980b9;
+        }
+        @media (max-width: 768px) {
+            .project-detail-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">我的专属网站</div>
+            <ul class="nav-links">
+                <li><a href="my-website.html#home">首页</a></li>
+                <li><a href="my-website.html#about">关于我</a></li>
+                <li><a href="my-website.html#portfolio">作品集</a></li>
+                <li><a href="my-website.html#contact">联系我</a></li>
+            </ul>
+            <div class="burger">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
+            </div>
+        </nav>
+    </header>
+
+    <section class="project-detail-container">
+        <div class="project-detail-header">
+            <h1>项目名称1</h1>
+            <p>项目描述1</p>
+        </div>
+
+        <div class="project-detail-content">
+            <div class="project-detail-image-container">
+                <img src="/images/pizza.svg" alt="项目名称1" class="project-detail-image">
+            </div>
+            <div class="project-detail-info">
+                <h3>项目概述</h3>
+                <p>这是项目名称1的详细描述。在这里，您可以了解到这个项目的背景、目标、实现过程和成果。</p>
+                <p>该项目旨在展示如何使用现代前端技术创建响应式网站，包括HTML5、CSS3和JavaScript等。</p>
+
+                <h3>项目特点</h3>
+                <ul class="project-features">
+                    <li><i class="fas fa-check-circle"></i> 响应式设计，适配各种设备</li>
+                    <li><i class="fas fa-check-circle"></i> 现代化UI设计，美观大方</li>
+                    <li><i class="fas fa-check-circle"></i> 交互友好，用户体验佳</li>
+                    <li><i class="fas fa-check-circle"></i> 代码结构清晰，易于维护</li>
+                </ul>
+
+                <a href="my-website.html#portfolio" class="back-btn">返回作品集</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 我的专属网站. 保留所有权利.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-weixin"></i></a>
+                <a href="#"><i class="fab fa-weibo"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/my-website-script.js"></script>
+</body>
+</html>

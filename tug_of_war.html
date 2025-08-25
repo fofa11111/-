@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拔河游戏</title>
+    <!-- 引入Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        
+        h1 {
+            margin-bottom: 30px;
+            color: #FF6B6B;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-size: 2.5em;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            height: 400px;
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: linear-gradient(to bottom, #8BC34A, #4CAF50);
+            border: 5px solid #FFC107;
+        }
+        
+        /* 拔河绳子 - 调整到小男孩身体中间位置(稍微向上调整) */
+        .rope {
+            position: absolute;
+            width: 100%;
+            height: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
+            background-image: url('./images/tug_rope.svg');
+            background-repeat: repeat-x;
+            background-size: contain;
+            --marker-position: 50%; /* 默认标记位置 */
+        }
+        
+        .rope::after {
+            content: '';
+            position: absolute;
+            left: var(--marker-position);
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background-color: #FFC107;
+            border-radius: 50%;
+            z-index: 2;
+            transition: left 0.5s ease;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.7);
+        }
+        
+        /* 小男孩容器 - 增加两队之间距离 */
+        .team {
+            position: absolute;
+            height: 100%;
+            width: 40%;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+        }
+        
+        .team-left {
+            left: 0;
+            justify-content: flex-end;
+        }
+        
+        .team-right {
+            right: 0;
+            justify-content: flex-start;
+        }
+        
+        .team-characters {
+            display: flex;
+            gap: 5px; /* 非常密集的排列 */
+            flex-direction: row;
+            align-items: center;
+        }
+        
+        /* 小男孩样式 - 使用拔河小男孩图片 */
+        .character {
+            width: 60px;
+            height: 100px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom;
+            transition: transform 0.3s ease;
+            z-index: 3;
+            position: relative;
+        }
+        
+        /* 为左侧和右侧角色分别设置呼吸动画，确保右侧角色保持镜像翻转 */
+        .character-left {
+            animation: breatheLeft 2s infinite alternate;
+            background-image: url('./images/拔河小男孩.png');
+        }
+        
+        .character-right {
+            animation: breatheRight 2s infinite alternate;
+            background-image: url('./images/拔河小男孩.png');
+            transform: scaleX(-1); /* 镜像翻转，面向左侧 */
+        }
+        
+        @keyframes breatheLeft {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+        
+        @keyframes breatheRight {
+            0% { transform: scale(1) scaleX(-1); }
+            100% { transform: scale(1.05) scaleX(-1); }
+        }
+        
+        /* 左侧小男孩滑倒效果 - 向左旋转90度 */
+        .character-left.slip {
+            transform: rotate(-90deg) scale(0.9) translateY(-20px);
+            animation: none;
+        }
+        
+        /* 右侧小男孩滑倒效果 - 向右旋转90度 */
+        .character-right.slip {
+            transform: rotate(90deg) scale(0.9) translateY(-20px) scaleX(-1);
+            animation: none;
+        }
+        
+        /* 按钮区域 */
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+        }
+        
+        #cheerBtn {
+            background-color: #2196F3;
+        }
+        
+        #cheerBtn:hover {
+            background-color: #0b7dda;
+            transform: translateY(-2px);
+        }
+        
+        #slipBtn {
+            background-color: #f44336;
+        }
+        
+        #slipBtn:hover {
+            background-color: #da190b;
+            transform: translateY(-2px);
+        }
+        
+        #standBtn {
+            background-color: #4CAF50;
+        }
+        
+        #standBtn:hover {
+            background-color: #3d8b40;
+            transform: translateY(-2px);
+        }
+        
+        /* 游戏状态显示 */
+        .game-status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* 语音播放界面样式 */
+        .voice-playback {
+            display: none;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .voice-playback.visible {
+            display: block;
+        }
+        
+        /* 语音按钮样式 */
+        .voice-button {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #1a8cff 0%, #0066cc 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 36px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 20px rgba(26, 140, 255, 0.5);
+            transition: all 0.3s ease;
+            margin: 0 auto 20px;
+        }
+        
+        .voice-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7), 0 0 30px rgba(26, 140, 255, 0.7);
+        }
+        
+        .voice-button:active {
+            transform: scale(0.95);
+        }
+        
+        /* 语音按钮波浪效果 */
+        .voice-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 140, 255, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            animation: wave 2s ease-out infinite;
+        }
+        
+        /* 说话气泡样式 */
+        .speech-bubble {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            padding: 15px 25px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-width: 200px;
+            text-align: center;
+            margin: 0 auto;
+        }
+        
+        /* 说话文字样式 */
+        .speech-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 1px;
+        }
+        
+        /* 字母逐个出现的样式 */
+        .speech-text span {
+            opacity: 0;
+            display: inline-block;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .speech-text.appear span {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 加载指示器 */
+        .loading {
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #00ff6c;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+            box-shadow: 0 0 30px rgba(0, 255, 108, 0.3);
+            margin: 0 auto;
+        }
+        
+        /* 动画定义 */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @keyframes wave {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+        
+        /* 游戏结束画面 */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            z-index: 10;
+        }
+        
+        /* 队伍标签样式 */
+        .team-label {
+            position: absolute;
+            top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 5;
+        }
+        
+        .team-label-left {
+            left: 20px;
+            background-color: rgba(0, 150, 136, 0.8);
+        }
+        
+        .team-label-right {
+            right: 20px;
+            background-color: rgba(244, 67, 54, 0.8);
+        }
+        
+        .game-over button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>拔河游戏</h1>
+    
+    <div class="game-container">
+        <!-- 绳子 -->
+        <div class="rope" id="rope"></div>
+        
+        <!-- 左侧队伍 -->
+        <div class="team team-left">
+            <div class="team-characters">
+                <div class="character character-left" id="player1"></div>
+                <div class="character character-left" id="player2"></div>
+                <div class="character character-left" id="player3"></div>
+            </div>
+        </div>
+        
+        <!-- 右侧队伍 -->
+        <div class="team team-right">
+            <div class="team-characters">
+                <div class="character character-right" id="enemy1"></div>
+                <div class="character character-right" id="enemy2"></div>
+                <div class="character character-right" id="enemy3"></div>
+            </div>
+        </div>
+        
+        <!-- 游戏结束画面 -->
+        <div class="game-over" id="gameOver">
+            <div id="winnerText"></div>
+            <button onclick="resetGame()">再来一局</button>
+        </div>
+        
+        <!-- 队伍标签 -->
+        <div class="team-label team-label-left">我方</div>
+        <div class="team-label team-label-right">敌方</div>
+    </div>
+    
+    <!-- 游戏状态 -->
+    <div class="game-status" id="status"></div>
+    
+    <!-- 语音播放界面 (默认显示) -->
+    <div class="voice-playback visible" id="voicePlayback">
+        <button class="voice-button" id="voiceButton"><i class="fas fa-microphone"></i></button>
+        <div class="speech-bubble">
+            <div class="speech-text" id="speechText"></div>
+        </div>
+        <div class="loading" id="loading"></div>
+    </div>
+    
+    <script>
+        // 获取DOM元素
+        const rope = document.getElementById('rope');
+        const status = document.getElementById('status');
+        const gameOver = document.getElementById('gameOver');
+        const winnerText = document.getElementById('winnerText');
+        
+        // 语音播放相关元素
+        const voicePlayback = document.getElementById('voicePlayback');
+        const voiceButton = document.getElementById('voiceButton');
+        const speechText = document.getElementById('speechText');
+        const loading = document.getElementById('loading');
+        
+        // 当前语音文本
+        let currentButtonText = '';
+        
+        // 游戏状态变量
+        let markerPosition = 50; // 绳子标记位置百分比
+        let enemySpeed = 0.05; // 敌人初始移动速度 (进一步降低，让游戏节奏更慢)
+        let isPlayerSlipping = false; // 玩家是否滑倒
+        let isEnemySlipping = false; // 敌人是否滑倒
+        let gameRunning = true;
+        
+        // 游戏主循环
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // 根据游戏状态更新绳子位置 - 优化速度变化逻辑
+            let currentSpeed = enemySpeed;
+            
+            if (isPlayerSlipping) {
+                // 玩家滑倒，敌人速度加快
+                currentSpeed = enemySpeed * 2;
+            } else if (isEnemySlipping) {
+                // 敌人滑倒，敌人速度减慢
+                currentSpeed = enemySpeed * 0.2; // 更明显的减速效果
+            } else {
+                // 正常速度，但会随着游戏进行逐渐增加一点难度
+                if (markerPosition > 50) {
+                    // 如果绳子偏向敌人，稍微增加速度
+                    currentSpeed = enemySpeed * 1.1;
+                }
+            }
+            
+            markerPosition += currentSpeed;
+            
+            // 更新绳子标记位置
+            rope.style.setProperty('--marker-position', `${markerPosition}%`);
+            
+            // 检查游戏是否结束
+            if (markerPosition >= 95) {
+                endGame('系统获胜！');
+            } else if (markerPosition <= 20) {
+                endGame('你获胜了！');
+            }
+            
+            // 游戏状态现在在UI上不显示，专注于动画效果
+            
+            // 继续游戏循环
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 开始游戏循环
+        gameLoop();
+        
+        // 自动时序交互流程
+        function startAutoSequence() {
+            // 第1-2秒：不显示任何文字
+            speechText.textContent = '';
+            
+            let pullInterval; // 拉绳子的定时器
+            let finalCheerInterval; // 最后加油的定时器
+            let allTimers = []; // 存储所有定时器ID，方便清除
+            
+            // 第3秒：显示"加油加油"，并每隔一秒拉绳子，大幅增加拉动幅度
+            setTimeout(() => {
+                if (!gameRunning) return;
+                showSpeakingAnimation('加油加油');
+                
+                // 每隔一秒拉绳子往我方移动，大幅增加拉动幅度
+                pullInterval = setInterval(() => {
+                    if (!gameRunning) {
+                        clearInterval(pullInterval);
+                        return;
+                    }
+                    // 大大增加拉动的幅度，使效果更明显
+                    markerPosition = Math.max(markerPosition - 12, 0); // 允许拉到0%（最左侧）
+                    rope.style.setProperty('--marker-position', `${markerPosition}%`);
+                    
+                    // 检查是否到达最左侧获胜
+                    if (markerPosition <= 0) {
+                        endGame(true); // 玩家胜利
+                    }
+                }, 1000);
+                allTimers.push(pullInterval);
+            }, 3000);
+            
+            // 第8秒：我方小孩摔倒，停止拉绳子，加油加油文字消失
+            setTimeout(() => {
+                if (!gameRunning) return;
+                
+                // 清除拉绳子的定时器
+                if (pullInterval) {
+                    clearInterval(pullInterval);
+                }
+                
+                // 清空语音文本
+                speechText.textContent = '';
+                
+                // 玩家状态变为滑倒
+                isPlayerSlipping = true;
+                
+                // 只让最左边的小男孩滑倒
+                const leftCharacters = document.querySelectorAll('.character-left');
+                if (leftCharacters.length > 0) {
+                    const leftmostCharacter = leftCharacters[0]; // 获取最左边的小男孩
+                    leftmostCharacter.classList.add('slip');
+                }
+            }, 8000);
+            
+            // 第9秒：语音识别下面显示"站起来"
+            setTimeout(() => {
+                if (!gameRunning) return;
+                showSpeakingAnimation('站起来');
+            }, 9000);
+            
+            // 第10秒："站起来"消失，我方小男孩站了起来，并且从此以后不再摔倒
+            setTimeout(() => {
+                if (!gameRunning) return;
+                
+                // 清空语音文本
+                speechText.textContent = '';
+                
+                // 玩家状态变为站立
+                isPlayerSlipping = false;
+                
+                // 移除滑倒效果
+                document.querySelectorAll('.character-left').forEach(char => {
+                    char.classList.remove('slip');
+                });
+                
+                // 禁用玩家随机滑倒事件
+                if (playerSlipInterval) {
+                    clearInterval(playerSlipInterval);
+                    playerSlipInterval = null;
+                }
+            }, 10000);
+            
+            // 第12秒：显示"滑倒"，同时对面小男孩滑倒
+            setTimeout(() => {
+                if (!gameRunning) return;
+                
+                // 显示"滑倒"
+                showSpeakingAnimation('滑倒');
+                
+                // 敌人状态变为滑倒
+                isEnemySlipping = true;
+                
+                // 让右边的小男孩滑倒
+                const rightCharacters = document.querySelectorAll('.character-right');
+                if (rightCharacters.length > 0) {
+                    const rightmostCharacter = rightCharacters[rightCharacters.length - 1]; // 获取最右边的小男孩
+                    rightmostCharacter.classList.add('slip');
+                }
+            }, 12000);
+            
+            // 第14秒：显示"加油加油"，绳子每隔一秒继续往回拉回一段距离，直到获得胜利
+            setTimeout(() => {
+                if (!gameRunning) return;
+                
+                // 显示"加油加油"
+                showSpeakingAnimation('加油加油');
+                
+                // 每隔一秒拉绳子往我方移动，大幅增加拉动幅度
+                finalCheerInterval = setInterval(() => {
+                    if (!gameRunning) {
+                        clearInterval(finalCheerInterval);
+                        return;
+                    }
+                    
+                    // 大大增加拉动的幅度，使效果更明显
+                    markerPosition = Math.max(markerPosition - 15, 0); // 允许拉到0%（最左侧）
+                    rope.style.setProperty('--marker-position', `${markerPosition}%`);
+                    
+                    // 每隔一段时间重新显示"加油加油"
+                    showSpeakingAnimation('加油加油');
+                    
+                    // 检查是否到达最左侧获胜
+                    if (markerPosition <= 0) {
+                        endGame(true); // 玩家胜利
+                    }
+                }, 1000);
+                allTimers.push(finalCheerInterval);
+                
+                // 降低敌人速度，让我方更容易获胜
+                enemySpeed = 0.005;
+            }, 14000);
+            
+            // 第15秒：对方滑倒的小男孩站了起来
+            setTimeout(() => {
+                if (!gameRunning) return;
+                
+                // 敌人状态变为站立
+                isEnemySlipping = false;
+                
+                // 移除滑倒效果
+                document.querySelectorAll('.character-right').forEach(char => {
+                    char.classList.remove('slip');
+                });
+            }, 15000);
+            
+            // 监听游戏胜利，清除所有定时器
+            const victoryCheckInterval = setInterval(() => {
+                if (!gameRunning) {
+                    clearInterval(victoryCheckInterval);
+                    if (pullInterval) clearInterval(pullInterval);
+                    if (finalCheerInterval) clearInterval(finalCheerInterval);
+                    // 清除所有其他定时器
+                    allTimers.forEach(timer => clearInterval(timer));
+                }
+            }, 100);
+            allTimers.push(victoryCheckInterval);
+        }
+        
+        // 开始自动时序交互
+        startAutoSequence();
+        
+        // 玩家滑倒随机事件
+        function startPlayerSlipInterval() {
+            return setInterval(() => {
+                if (!gameRunning) return;
+                
+                // 随机决定是否让玩家滑倒
+            const shouldSlip = Math.random() > 0.7; // 30%概率滑倒
+            if (shouldSlip) {
+                // 玩家状态变为滑倒
+                isPlayerSlipping = true;
+                
+                // 只让最左边的小男孩滑倒(向左旋转90度)
+                const leftCharacters = document.querySelectorAll('.character-left');
+                if (leftCharacters.length > 0) {
+                    const leftmostCharacter = leftCharacters[0]; // 获取最左边的小男孩
+                    leftmostCharacter.classList.add('slip');
+                }
+                    
+                    // 3秒后自动尝试站起来
+                    setTimeout(() => {
+                        if (isPlayerSlipping && gameRunning) {
+                            isPlayerSlipping = false;
+                            // 移除滑倒效果
+                            document.querySelectorAll('.character-left').forEach(char => {
+                                char.classList.remove('slip');
+                            });
+                        }
+                    }, 3000);
+                }
+            }, 5000);
+        }
+        
+        // 设置玩家滑倒定时器
+        let playerSlipInterval = startPlayerSlipInterval();
+        
+
+        
+        // 显示说话动画
+        function showSpeakingAnimation(text) {
+            // 显示对话容器
+            voicePlayback.classList.add('visible');
+            loading.style.display = 'none';
+            
+            // 为文字创建字母逐个出现的效果
+            speechText.innerHTML = '';
+            for (let i = 0; i < text.length; i++) {
+                const span = document.createElement('span');
+                span.textContent = text[i];
+                span.style.animationDelay = `${i * 0.1}s`;
+                speechText.appendChild(span);
+            }
+            
+            // 添加字母出现动画类
+            speechText.classList.add('appear');
+            
+            // 延迟后显示所有字母
+            setTimeout(() => {
+                const spans = speechText.querySelectorAll('span');
+                spans.forEach((span, index) => {
+                    setTimeout(() => {
+                        span.style.opacity = '1';
+                        span.style.transform = 'translateY(0)';
+                    }, index * 100);
+                });
+            }, 100);
+        }
+        
+        // 处理语音按钮点击
+        voiceButton.addEventListener('click', () => {
+            // 语音按钮动画效果
+            voiceButton.style.transform = 'scale(0.9)';
+            
+            setTimeout(() => {
+                voiceButton.style.transform = 'scale(1)';
+            }, 200);
+        });
+        
+        // 结束游戏函数
+        function endGame(winner) {
+            gameRunning = false;
+            clearInterval(playerSlipInterval);
+            winnerText.textContent = winner;
+            gameOver.style.display = 'flex';
+        }
+        
+        // 重置游戏函数
+        function resetGame() {
+            // 重置游戏状态
+            markerPosition = 50;
+            enemySpeed = 0.05; // 初始慢速
+            isPlayerSlipping = false;
+            isEnemySlipping = false;
+            gameRunning = true;
+            
+            // 重置DOM元素
+            gameOver.style.display = 'none';
+            voicePlayback.classList.add('visible');
+            speechText.textContent = '';
+            
+            // 移除所有角色的滑倒效果
+            document.querySelectorAll('.character').forEach(char => {
+                char.classList.remove('slip');
+            });
+            
+            // 重新开始游戏循环
+            gameLoop();
+            
+            // 重新设置玩家滑倒定时器
+            startPlayerSlipInterval();
+            
+            // 重新开始自动时序交互
+            startAutoSequence();
+        }
+    </script>
+</body>
+</html>

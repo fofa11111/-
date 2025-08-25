@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>车辆行驶模拟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a2e;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #0f3460;
+            perspective: 1000px;
+        }
+        
+        /* 背景环境 */
+        .environment {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .grass {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #2d8246;
+        }
+        
+        .trees {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .tree {
+            position: absolute;
+            width: 60px;
+            height: 100px;
+            background: #8b4513;
+            border-radius: 5px;
+        }
+        
+        .tree::before {
+            content: '';
+            position: absolute;
+            bottom: 80px;
+            left: -20px;
+            width: 100px;
+            height: 80px;
+            background: #0b5345;
+            border-radius: 50%;
+        }
+        
+        /* 斜顶视角的道路 */
+        .road-container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(40%) rotateX(60deg);
+            transform-origin: bottom;
+            width: 100%;
+            height: 250%;
+            z-index: 1;
+            overflow: visible;
+        }
+        
+        .road {
+            position: absolute;
+            width: 1600px;
+            height: 6000px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+            background-image: url('images/路.png');
+            background-size: 1600px auto;
+        }
+        
+        /* 车辆 */
+        .vehicle {
+            position: absolute;
+            width: 120px;
+            height: 180px;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background-image: url('images/车.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        /* 障碍物 */
+        .stone {
+            position: absolute;
+            z-index: 5;
+            transform-origin: bottom;
+        }
+        
+        .stone img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .plastic-bag {
+            transform: rotate(45deg);
+        }
+        
+        /* 控制按钮 */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .controls button {
+            padding: 10px 20px;
+            background: #16213e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .controls button:hover {
+            background: #0f3460;
+        }
+        
+        /* 分数显示 */
+        .score {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 背景环境 -->
+        <div class="environment">
+            <div class="grass"></div>
+            <div class="trees"></div>
+        </div>
+        
+        <!-- 道路 -->
+        <div class="road-container">
+            <div class="road"></div>
+        </div>
+        
+        <!-- 车辆 -->
+        <div class="vehicle"></div>
+    </div>
+    
+    <!-- 控制按钮 -->
+    <div class="controls">
+        <button id="leftBtn">← 左移</button>
+        <button id="rightBtn">右移 →</button>
+        <button id="startBtn">开始游戏</button>
+    </div>
+    
+    <!-- 分数显示 -->
+    <div class="score">分数: <span id="scoreValue">0</span></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取元素
+            const container = document.querySelector('.container');
+            const road = document.querySelector('.road');
+            const vehicle = document.querySelector('.vehicle');
+            const treesContainer = document.querySelector('.trees');
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const startBtn = document.getElementById('startBtn');
+            const scoreValue = document.getElementById('scoreValue');
+            
+            // 游戏状态
+            let score = 0;
+            let isGameRunning = false;
+            let isAvoiding = false;
+            let currentLane = 'left'; // 'left', 'center', 'right'
+            const stones = [];
+            
+            // 初始化车辆到左车道
+            moveToLeftLane();
+            
+            // 生成随机树木
+            function generateTrees() {
+                const containerWidth = container.offsetWidth;
+                const containerHeight = container.offsetHeight;
+                const treeCount = 15;
+                
+                for (let i = 0; i < treeCount; i++) {
+                    const tree = document.createElement('div');
+                    tree.classList.add('tree');
+                    
+                    // 随机位置 - 确保树木在道路两侧
+                    const isLeftSide = Math.random() > 0.5;
+                    const leftPos = isLeftSide ? 
+                        Math.random() * (containerWidth / 2 - 200) : 
+                        containerWidth / 2 + 200 + Math.random() * (containerWidth / 2 - 200);
+                    
+                    const topPos = Math.random() * containerHeight;
+                    
+                    // 随机大小
+                    const scale = 0.5 + Math.random() * 0.8;
+                    
+                    tree.style.left = `${leftPos}px`;
+                    tree.style.top = `${topPos}px`;
+                    tree.style.transform = `scale(${scale})`;
+                    
+                    treesContainer.appendChild(tree);
+                }
+            }
+            
+            // 开始游戏
+            startBtn.addEventListener('click', function() {
+                if (isGameRunning) {
+                    // 暂停游戏
+                    isGameRunning = false;
+                    startBtn.textContent = '继续游戏';
+                } else {
+                    // 开始或继续游戏
+                    isGameRunning = true;
+                    startBtn.textContent = '暂停游戏';
+                    gameLoop();
+                }
+            });
+            
+            // 左移按钮
+            leftBtn.addEventListener('click', function() {
+                if (!isGameRunning) return;
+                moveToLeftLane();
+            });
+            
+            // 右移按钮
+            rightBtn.addEventListener('click', function() {
+                if (!isGameRunning) return;
+                moveToRightLane();
+            });
+            
+            // 键盘控制
+            document.addEventListener('keydown', function(event) {
+                if (!isGameRunning) return;
+                
+                if (event.key === 'ArrowLeft') {
+                    moveToLeftLane();
+                } else if (event.key === 'ArrowRight') {
+                    moveToRightLane();
+                }
+            });
+            
+            // 移动到左车道
+            function moveToLeftLane() {
+                if (isAvoiding) return;
+                
+                // 基于道路元素的位置和尺寸计算左车道位置
+                const roadRect = road.getBoundingClientRect();
+                const roadWidth = roadRect.width;
+                const containerRect = container.getBoundingClientRect();
+                
+                // 计算左车道中心位置
+                const leftLaneCenter = roadRect.left + roadWidth * 0.25;
+                const relativeLeft = leftLaneCenter - containerRect.left - vehicle.offsetWidth / 2;
+                
+                vehicle.style.left = `${relativeLeft}px`;
+                currentLane = 'left';
+            }
+            
+            // 移动到中间车道
+            function moveToCenterLane() {
+                if (isAvoiding) return;
+                
+                // 基于道路元素的位置和尺寸计算中间车道位置
+                const roadRect = road.getBoundingClientRect();
+                const roadWidth = roadRect.width;
+                const containerRect = container.getBoundingClientRect();
+                
+                // 计算中间车道中心位置
+                const centerLaneCenter = roadRect.left + roadWidth * 0.5;
+                const relativeLeft = centerLaneCenter - containerRect.left - vehicle.offsetWidth / 2;
+                
+                vehicle.style.left = `${relativeLeft}px`;
+                currentLane = 'center';
+            }
+            
+            // 移动到右车道
+            function moveToRightLane() {
+                if (isAvoiding) return;
+                
+                // 基于道路元素的位置和尺寸计算右车道位置
+                const roadRect = road.getBoundingClientRect();
+                const roadWidth = roadRect.width;
+                const containerRect = container.getBoundingClientRect();
+                
+                // 计算右车道中心位置
+                const rightLaneCenter = roadRect.left + roadWidth * 0.75;
+                const relativeLeft = rightLaneCenter - containerRect.left - vehicle.offsetWidth / 2;
+                
+                vehicle.style.left = `${relativeLeft}px`;
+                currentLane = 'right';
+            }
+            
+            // 生成随机障碍物
+            function generateRandomStone() {
+                if (!isGameRunning) return;
+                
+                const stone = document.createElement('div');
+                stone.classList.add('stone');
+                
+                // 随机选择障碍物类型
+                const stoneType = Math.floor(Math.random() * 4); // 0-3 四种障碍物
+                let stoneImage = '';
+                let stoneWidth = 50;
+                let stoneHeight = 50;
+                let isPlasticBag = false;
+                let isDog = false;
+                let isGrandma = false;
+                
+                switch (stoneType) {
+                    case 0: // 石头
+                        stoneImage = `images/石头${Math.floor(Math.random() * 18) + 1}.png`;
+                        break;
+                    case 1: // 路障
+                        const barrierNum = Math.floor(Math.random() * 3) + 1;
+                        stoneImage = barrierNum === 1 ? 'images/路障 1.png' : `images/路障${barrierNum}.png`;
+                        stoneWidth = 70;
+                        stoneHeight = 70;
+                        break;
+                    case 2: // 塑料袋
+                        stoneImage = 'images/塑料袋.png';
+                        stoneWidth = 40;
+                        stoneHeight = 40;
+                        stone.classList.add('plastic-bag');
+                        isPlasticBag = true;
+                        break;
+                    case 3: // 狗
+                        stoneImage = 'images/狗1.png';
+                        stoneWidth = 60;
+                        stoneHeight = 60;
+                        isDog = true;
+                        break;
+                    case 4: // 老奶奶
+                        stoneImage = 'images/老奶奶1.png';
+                        stoneWidth = 80;
+                        stoneHeight = 120;
+                        isGrandma = true;
+                        break;
+                }
+                
+                // 创建图片元素
+                const img = document.createElement('img');
+                img.src = stoneImage;
+                stone.appendChild(img);
+                
+                // 设置障碍物大小
+                stone.style.width = `${stoneWidth}px`;
+                stone.style.height = `${stoneHeight}px`;
+                
+                // 随机车道
+                const lane = Math.floor(Math.random() * 3); // 0-2 三个车道
+                let leftPos = 0;
+                
+                const roadRect = road.getBoundingClientRect();
+                const roadWidth = roadRect.width;
+                const containerRect = container.getBoundingClientRect();
+                
+                // 根据车道设置水平位置
+                switch (lane) {
+                    case 0: // 左车道
+                        leftPos = roadRect.left + roadWidth * 0.25 - stoneWidth / 2;
+                        break;
+                    case 1: // 中间车道
+                        leftPos = roadRect.left + roadWidth * 0.5 - stoneWidth / 2;
+                        break;
+                    case 2: // 右车道
+                        leftPos = roadRect.left + roadWidth * 0.75 - stoneWidth / 2;
+                        break;
+                }
+                
+                // 转换为相对于容器的位置
+                const relativeLeft = leftPos - containerRect.left;
+                
+                stone.style.left = `${relativeLeft}px`;
+                stone.style.top = '-100px'; // 从屏幕上方外部开始
+                
+                // 添加到容器
+                container.appendChild(stone);
+                
+                // 记录障碍物信息
+                stones.push({
+                    element: stone,
+                    left: parseFloat(stone.style.left),
+                    top: parseFloat(stone.style.top),
+                    width: stoneWidth,
+                    height: stoneHeight,
+                    detected: false,
+                    lane: lane === 0 ? 'left' : lane === 1 ? 'center' : 'right',
+                    isPlasticBag: isPlasticBag,
+                    isDog: isDog,
+                    isGrandma: isGrandma
+                });
+            }
+            
+            // 闪烁车灯
+            function flashHeadlights() {
+                // 创建左右车灯
+                const leftHeadlight = document.createElement('div');
+                const rightHeadlight = document.createElement('div');
+                
+                leftHeadlight.style.position = 'absolute';
+                rightHeadlight.style.position = 'absolute';
+                
+                leftHeadlight.style.width = '20px';
+                leftHeadlight.style.height = '10px';
+                rightHeadlight.style.width = '20px';
+                rightHeadlight.style.height = '10px';
+                
+                leftHeadlight.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                rightHeadlight.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                
+                leftHeadlight.style.borderRadius = '50%';
+                rightHeadlight.style.borderRadius = '50%';
+                
+                leftHeadlight.style.top = '20px'; // 车灯放在前面
+                leftHeadlight.style.left = '10px';
+                rightHeadlight.style.top = '20px'; // 车灯放在前面
+                rightHeadlight.style.right = '10px';
+                
+                leftHeadlight.style.boxShadow = '0 0 20px 10px rgba(255, 255, 255, 0.5)';
+                rightHeadlight.style.boxShadow = '0 0 20px 10px rgba(255, 255, 255, 0.5)';
+                
+                vehicle.appendChild(leftHeadlight);
+                vehicle.appendChild(rightHeadlight);
+                
+                // 闪烁效果 - 让闪烁更明显
+                let opacity = 1;
+                let decreasing = true;
+                
+                const flashInterval = setInterval(() => {
+                    if (decreasing) {
+                        opacity -= 0.2; // 更快的亮度变化
+                        if (opacity <= 0.2) {
+                            decreasing = false;
+                        }
+                    } else {
+                        opacity += 0.2;
+                        if (opacity >= 1) {
+                            decreasing = true;
+                        }
+                    }
+                    
+                    leftHeadlight.style.opacity = opacity;
+                    rightHeadlight.style.opacity = opacity;
+                }, 150); // 更慢的闪烁间隔
+                
+                // 0.5秒后移除车灯效果
+                setTimeout(() => {
+                    clearInterval(flashInterval);
+                    leftHeadlight.remove();
+                    rightHeadlight.remove();
+                }, 500);
+            }
+            
+            // 检测碰撞并避开
+            function checkCollision() {
+                if (isAvoiding) return;
+                
+                const vehicleRect = vehicle.getBoundingClientRect();
+                
+                stones.forEach(stone => {
+                    if (!stone.detected) return;
+                    // 如果是塑料袋，直接跳过碰撞处理，让车辆压过去
+                    if (stone.element.classList.contains('plastic-bag')) return;
+                    
+                    const stoneRect = stone.element.getBoundingClientRect();
+                    
+                    // 检查障碍物是否在车辆前方一定距离内
+                    if (stoneRect.bottom >= vehicleRect.top - 200 && stoneRect.bottom <= vehicleRect.top) {
+                        
+                        // 如果是狗，让狗自己跑开
+                        if (stone.isDog) {
+                            // 开启车灯闪烁
+                            flashHeadlights();
+                            
+                            // 标记正在处理特殊行为，停止其下落
+                            stone.isMovingAway = true;
+                            
+                            // 计算马路宽度和目标平移距离（马路宽度的一半）
+                            const roadWidth = 1600; // 从CSS中获取的马路宽度
+                            const moveDistance = roadWidth / 2; // 马路宽度的一半（800px）
+                            
+                            let startTime = null;
+                            const moveDuration = 1000; // 移动时间保持在1秒（1000毫秒）
+                            
+                            function smoothMove(timestamp) {
+                                if (!startTime) startTime = timestamp;
+                                const progress = timestamp - startTime;
+                                const percentage = Math.min(progress / moveDuration, 1);
+                                
+                                // 使用缓动函数使移动更平滑
+                                const easeOutQuart = 1 - Math.pow(1 - percentage, 4);
+                                
+                                // 计算缓慢平滑的向右移动位置
+                                const newLeft = stone.left + moveDistance * easeOutQuart;
+                                stone.element.style.left = `${newLeft}px`;
+                                
+                                // 移动结束后移除元素
+                                if (progress < moveDuration) {
+                                    requestAnimationFrame(smoothMove);
+                                } else if (!stone.isPlasticBag) { // 塑料袋不会触发躲避
+                                    stone.element.remove();
+                                    stones = stones.filter(s => s !== stone);
+                                }
+                            }
+                            
+                            // 立即开始平滑移动
+                            requestAnimationFrame(smoothMove);
+                        } 
+                        // 如果是老奶奶或其他障碍物（石头、路障），车辆主动避让
+                        else {
+                            // 如果是老奶奶，开启车灯闪烁
+                            if (stone.isGrandma) {
+                                flashHeadlights();
+                            }
+                            // 如果障碍物在当前车道
+                            const currentVehicleLane = currentLane === 'left' ? 'left' : 
+                                            currentLane === 'right' ? 'right' : 
+                                            (vehicleRect.left < (window.innerWidth / 2)) ? 'left' : 'right';
+                            
+                            if (stone.lane === currentVehicleLane) {
+                                // 需要避开，切换到另一个车道
+                                isAvoiding = true;
+                                
+                                if (currentVehicleLane === 'left') {
+                                    moveToRightLane();
+                                } else if (currentVehicleLane === 'center') {
+                                    // 如果在中间车道，随机选择左右车道
+                                    if (Math.random() > 0.5) {
+                                        moveToLeftLane();
+                                    } else {
+                                        moveToRightLane();
+                                    }
+                                } else {
+                                    moveToLeftLane();
+                                }
+                                
+                                // 3秒后可以再次切换车道
+                                setTimeout(() => {
+                                    isAvoiding = false;
+                                }, 3000);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 更新障碍物位置
+            function updateStones() {
+                if (!isGameRunning) return;
+                
+                stones.forEach(stone => {
+                    // 如果正在进行特殊移动，跳过普通下落
+                    if (stone.isMovingAway) return;
+                    
+                    // 计算新位置
+                    const newTop = stone.top + 2; // 下落速度
+                    stone.element.style.top = `${newTop}px`;
+                    stone.top = newTop;
+                    
+                    // 检测障碍物是否进入视口
+                    const stoneRect = stone.element.getBoundingClientRect();
+                    if (!stone.detected && stoneRect.bottom > 0) {
+                        stone.detected = true;
+                    }
+                    
+                    // 增加分数（当障碍物通过车辆下方时）
+                    const vehicleRect = vehicle.getBoundingClientRect();
+                    if (stone.detected && !stone.scored && stoneRect.bottom > vehicleRect.bottom + 50) {
+                        stone.scored = true;
+                        score += 10;
+                        scoreValue.textContent = score;
+                    }
+                });
+            }
+            
+            // 更新树木位置，模拟移动效果
+            function updateEnvironment() {
+                const trees = document.querySelectorAll('.tree');
+                trees.forEach(tree => {
+                    const currentTop = parseFloat(tree.style.top || '0px');
+                    // 树木缓慢向下移动，创造车辆前进的感觉
+                    tree.style.top = `${(currentTop + 0.5) % (container.offsetHeight + 100)}px`;
+                });
+            }
+            
+            // 清理离开视口的石头
+            function cleanupStones() {
+                stones = stones.filter(stone => {
+                    const rect = stone.element.getBoundingClientRect();
+                    if (rect.top > window.innerHeight) {
+                        stone.element.remove();
+                        return false;
+                    }
+                    return true;
+                });
+            }
+            
+            // 动画循环
+            function gameLoop() {
+                if (!isGameRunning) return;
+                
+                updateStones();
+                checkCollision();
+                updateEnvironment();
+                cleanupStones();
+                
+                requestAnimationFrame(gameLoop);
+            }
+            
+            // 随机生成障碍物
+            setInterval(() => {
+                if (isGameRunning && Math.random() > 0.3) { // 70%的概率生成障碍物
+                    generateRandomStone();
+                }
+            }, 1000);
+            
+            // 生成初始树木
+            generateTrees();
+        });
+    </script>
+</body>
+</html>

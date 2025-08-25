@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试LocalStorage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .log {
+            background-color: #333;
+            color: #fff;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .highlight {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>LocalStorage 测试工具</h1>
+    
+    <div class="container">
+        <h2>检查 sharedTrainingData</h2>
+        <button id="checkData">检查数据</button>
+        <button id="setSampleData">设置示例数据</button>
+        <button id="clearData">清空数据</button>
+    </div>
+    
+    <div class="container">
+        <h2>数据同步测试</h2>
+        <button id="syncTest">开始同步测试（每秒检查）</button>
+        <button id="stopSyncTest" disabled>停止同步测试</button>
+    </div>
+    
+    <div class="container">
+        <h2>调试日志</h2>
+        <div id="log" class="log"></div>
+    </div>
+    
+    <script>
+        const logElement = document.getElementById('log');
+        let syncInterval = null;
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function checkSharedData() {
+            try {
+                const data = localStorage.getItem('sharedTrainingData');
+                log('检查 sharedTrainingData:');
+                if (data) {
+                    log(`数据存在，长度: ${data.length} 字符`);
+                    try {
+                        const parsedData = JSON.parse(data);
+                        log('数据解析成功:');
+                        // 检查dog-rock数据
+                        if (parsedData.dog && parsedData.dog.rock !== undefined) {
+                            log(`<span class="highlight">dog类别石头图片数量: ${parsedData.dog.rock}</span>`);
+                        }
+                        // 检查数据结构
+                        for (const category in parsedData) {
+                            log(`${category}:`);
+                            for (const type in parsedData[category]) {
+                                log(`  ${type}: ${parsedData[category][type]}`);
+                            }
+                        }
+                    } catch (e) {
+                        log(`数据解析失败: ${e.message}`);
+                        log(`原始数据: ${data}`);
+                    }
+                } else {
+                    log('数据不存在');
+                }
+            } catch (e) {
+                log(`检查失败: ${e.message}`);
+            }
+        }
+        
+        function setSampleData() {
+            const sampleData = {
+                'rock': { 'rock': 5, 'barrier': 1, 'dog': 1, 'grandma': 0, 'plastic-bag': 0 },
+                'barrier': { 'rock': 1, 'barrier': 4, 'dog': 0, 'grandma': 0, 'plastic-bag': 0 },
+                'dog': { 'rock': 7, 'barrier': 0, 'dog': 3, 'grandma': 1, 'plastic-bag': 0 },
+                'grandma': { 'rock': 0, 'barrier': 0, 'dog': 1, 'grandma': 4, 'plastic-bag': 0 },
+                'plastic-bag': { 'rock': 0, 'barrier': 0, 'dog': 0, 'grandma': 0, 'plastic-bag': 3 }
+            };
+            
+            try {
+                localStorage.setItem('sharedTrainingData', JSON.stringify(sampleData));
+                log('已设置示例数据到localStorage');
+                log(`示例数据包含dog类别中7张石头图片`);
+                checkSharedData();
+            } catch (e) {
+                log(`设置示例数据失败: ${e.message}`);
+            }
+        }
+        
+        function clearSharedData() {
+            try {
+                localStorage.removeItem('sharedTrainingData');
+                log('已清空sharedTrainingData');
+            } catch (e) {
+                log(`清空失败: ${e.message}`);
+            }
+        }
+        
+        function startSyncTest() {
+            let lastData = null;
+            
+            log('开始同步测试...');
+            document.getElementById('syncTest').disabled = true;
+            document.getElementById('stopSyncTest').disabled = false;
+            
+            syncInterval = setInterval(() => {
+                try {
+                    const currentData = localStorage.getItem('sharedTrainingData');
+                    
+                    if (currentData !== lastData) {
+                        log('<span class="highlight">检测到数据变化!</span>');
+                        lastData = currentData;
+                        
+                        if (currentData) {
+                            try {
+                                const parsedData = JSON.parse(currentData);
+                                if (parsedData.dog && parsedData.dog.rock !== undefined) {
+                                    log(`dog类别石头图片数量: ${parsedData.dog.rock}`);
+                                }
+                            } catch (e) {
+                                log(`数据解析失败: ${e.message}`);
+                            }
+                        } else {
+                            log('数据已被清空');
+                        }
+                    }
+                } catch (e) {
+                    log(`同步测试出错: ${e.message}`);
+                }
+            }, 1000);
+        }
+        
+        function stopSyncTest() {
+            clearInterval(syncInterval);
+            log('停止同步测试');
+            document.getElementById('syncTest').disabled = false;
+            document.getElementById('stopSyncTest').disabled = true;
+        }
+        
+        // 事件监听
+        document.getElementById('checkData').addEventListener('click', checkSharedData);
+        document.getElementById('setSampleData').addEventListener('click', setSampleData);
+        document.getElementById('clearData').addEventListener('click', clearSharedData);
+        document.getElementById('syncTest').addEventListener('click', startSyncTest);
+        document.getElementById('stopSyncTest').addEventListener('click', stopSyncTest);
+        
+        // 初始检查
+        log('页面加载完成，准备测试localStorage...');
+    </script>
+</body>
+</html>

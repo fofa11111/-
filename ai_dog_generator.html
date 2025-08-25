@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI小狗生成器</title>
+    <link rel="stylesheet" href="/my-website-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .ai-dog-generator-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            margin-top: 80px;
+        }
+        .ai-dog-generator-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .ai-dog-controls {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .ai-dog-controls label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .ai-dog-controls textarea {
+            width: 100%;
+            height: 120px;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            resize: vertical;
+            font-family: 'Arial', sans-serif;
+        }
+        .option-group {
+            margin-bottom: 1.5rem;
+        }
+        .option-group h4 {
+            margin-bottom: 0.8rem;
+            color: #333;
+        }
+        .option-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+        .option-btn {
+            padding: 0.5rem 1rem;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .option-btn:hover,
+        .option-btn.active {
+            background: #4a6fa5;
+            color: white;
+            border-color: #4a6fa5;
+        }
+        .generate-btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+        .generate-btn:hover {
+            background: #3a5a8c;
+        }
+        .generate-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: inline-block;
+            margin-left: 0.8rem;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .ai-dog-result {
+            margin-top: 2rem;
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .result-image-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .result-image {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .history-section {
+            margin-top: 3rem;
+        }
+        .history-title {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        .history-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .history-item {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .history-item:hover {
+            transform: scale(1.03);
+        }
+        .history-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.8rem 1.5rem;
+            background: #4a6fa5;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+        .back-btn:hover {
+            background: #3a5a8c;
+        }
+        .preset-prompt-btn {
+            padding: 0.5rem 1rem;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .preset-prompt-btn:hover {
+            background: #e0e0e0;
+        }
+        .dog-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+        @media (max-width: 768px) {
+            .ai-dog-generator-container {
+                padding: 1rem;
+            }
+            .option-buttons {
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">我的专属网站</div>
+            <ul class="nav-links">
+                <li><a href="my-website.html#home">首页</a></li>
+                <li><a href="my-website.html#about">关于我</a></li>
+                <li><a href="my-website.html#portfolio">作品集</a></li>
+                <li><a href="my-website.html#contact">联系我</a></li>
+            </ul>
+            <div class="burger">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
+            </div>
+        </nav>
+    </header>
+
+    <section class="ai-dog-generator-container">
+        <div class="ai-dog-generator-header">
+            <h1><i class="fas fa-dog dog-icon"></i>AI小狗生成器</h1>
+            <p>创建你梦想中的小狗形象，选择品种、风格和环境</p>
+        </div>
+
+        <div class="ai-dog-controls">
+            <div class="api-key-info" style="background-color: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; border-left: 4px solid #4a6fa5;">
+                <p style="margin: 0;"><strong>提示:</strong> 本AI小狗生成功能需要使用火山引擎的图像生成API。您需要输入自己的火山引擎API密钥和应用ID才能使用。</p>
+            </div>
+            
+            <!-- API密钥和应用ID输入 -->
+            <div class="api-key-container">
+                <label for="api-key">火山引擎API 密钥 (获取: <a href="https://console.volcengine.com/iam/keymanage/" target="_blank">https://console.volcengine.com/iam/keymanage/</a>):</label>
+                <input type="password" id="api-key" placeholder="AKLT..." style="width: 100%; padding: 0.8rem; margin-bottom: 1.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                <label for="app-id">火山引擎应用ID (获取: <a href="https://console.volcengine.com/ai/dashscope/overview/" target="_blank">https://console.volcengine.com/ai/dashscope/overview/</a>):</label>
+                <input type="text" id="app-id" placeholder="您的应用ID" style="width: 100%; padding: 0.8rem; margin-bottom: 1.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem;">注意: 本项目仅在客户端临时存储您的API密钥和应用ID，不会上传或分享。</p>
+            </div>
+
+            <!-- 自定义描述 -->
+            <label for="description">请描述你想要的小狗：</label>
+            <textarea id="description" placeholder="例如：一只可爱的金毛犬，坐在草地上，阳光明媚，开心的表情，风格：卡通..."></textarea>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <h4>快速提示词：</h4>
+                <div class="preset-prompt-buttons">
+                    <button class="preset-prompt-btn" data-prompt="一只可爱的金毛犬，阳光下微笑的表情，蓬松的毛发">金毛微笑</button>
+                    <button class="preset-prompt-btn" data-prompt="一只活泼的柯基犬，短腿，大屁股，正在奔跑">活泼柯基</button>
+                    <button class="preset-prompt-btn" data-prompt="一只高贵的哈士奇，蓝色眼睛，站在雪地里">冰雪哈士奇</button>
+                    <button class="preset-prompt-btn" data-prompt="一只慵懒的加菲猫，趴在沙发上，眯着眼睛">慵懒加菲</button>
+                    <button class="preset-prompt-btn" data-prompt="一只机灵的边牧，正在玩飞盘，黑白相间的毛发">边牧飞盘</button>
+                </div>
+            </div>
+
+            <!-- 小狗品种选择 -->
+            <div class="option-group">
+                <h4>选择小狗品种：</h4>
+                <div class="option-buttons">
+                    <div class="option-btn" data-breed="金毛">金毛</div>
+                    <div class="option-btn" data-breed="柯基">柯基</div>
+                    <div class="option-btn" data-breed="哈士奇">哈士奇</div>
+                    <div class="option-btn" data-breed="萨摩耶">萨摩耶</div>
+                    <div class="option-btn" data-breed="拉布拉多">拉布拉多</div>
+                    <div class="option-btn" data-breed="比熊">比熊</div>
+                    <div class="option-btn" data-breed="泰迪">泰迪</div>
+                    <div class="option-btn" data-breed="边牧">边牧</div>
+                    <div class="option-btn" data-breed="柴犬">柴犬</div>
+                    <div class="option-btn active" data-breed="不限">不限</div>
+                </div>
+            </div>
+
+            <!-- 小狗表情选择 -->
+            <div class="option-group">
+                <h4>选择小狗表情：</h4>
+                <div class="option-buttons">
+                    <div class="option-btn active" data-expression="开心">开心</div>
+                    <div class="option-btn" data-expression="呆萌">呆萌</div>
+                    <div class="option-btn" data-expression="活泼">活泼</div>
+                    <div class="option-btn" data-expression="安静">安静</div>
+                    <div class="option-btn" data-expression="委屈">委屈</div>
+                    <div class="option-btn" data-expression="警觉">警觉</div>
+                </div>
+            </div>
+
+            <!-- 艺术风格选择 -->
+            <div class="option-group">
+                <h4>选择艺术风格：</h4>
+                <div class="option-buttons">
+                    <div class="option-btn active" data-style="卡通">卡通</div>
+                    <div class="option-btn" data-style="写实">写实</div>
+                    <div class="option-btn" data-style="水彩">水彩</div>
+                    <div class="option-btn" data-style="油画">油画</div>
+                    <div class="option-btn" data-style="动漫">动漫</div>
+                    <div class="option-btn" data-style="像素">像素</div>
+                </div>
+            </div>
+
+            <!-- 环境选择 -->
+            <div class="option-group">
+                <h4>选择环境背景：</h4>
+                <div class="option-buttons">
+                    <div class="option-btn active" data-environment="草地">草地</div>
+                    <div class="option-btn" data-environment="室内">室内</div>
+                    <div class="option-btn" data-environment="雪地">雪地</div>
+                    <div class="option-btn" data-environment="沙滩">沙滩</div>
+                    <div class="option-btn" data-environment="城市">城市</div>
+                    <div class="option-btn" data-environment="森林">森林</div>
+                    <div class="option-btn" data-environment="简单背景">简单背景</div>
+                </div>
+            </div>
+
+            <button id="generate-btn" class="generate-btn">
+                生成小狗
+                <span id="loading-indicator" class="loading" style="display: none;"></span>
+            </button>
+        </div>
+
+        <div id="ai-dog-result" class="ai-dog-result" style="display: none;">
+            <h3>生成结果：</h3>
+            <div class="result-image-container">
+                <img id="result-image" class="result-image" src="" alt="AI生成的小狗">
+            </div>
+            <p id="result-description"></p>
+        </div>
+
+        <div class="history-section">
+            <h3 class="history-title">历史作品：</h3>
+            <div id="history-gallery" class="history-gallery">
+                <!-- 历史作品会在这里动态生成 -->
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="my-website.html#portfolio" class="back-btn">返回作品集</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 我的专属网站. 保留所有权利.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-weixin"></i></a>
+                <a href="#"><i class="fab fa-weibo"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/my-website-script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generate-btn');
+            const descriptionInput = document.getElementById('description');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const resultSection = document.getElementById('ai-dog-result');
+            const resultImage = document.getElementById('result-image');
+            const resultDescription = document.getElementById('result-description');
+            const historyGallery = document.getElementById('history-gallery');
+            const apiKeyInput = document.getElementById('api-key');
+            const appIdInput = document.getElementById('app-id');
+            
+            // 获取所有选项按钮
+            const breedButtons = document.querySelectorAll('[data-breed]');
+            const expressionButtons = document.querySelectorAll('[data-expression]');
+            const styleButtons = document.querySelectorAll('[data-style]');
+            const environmentButtons = document.querySelectorAll('[data-environment]');
+            const presetPromptButtons = document.querySelectorAll('.preset-prompt-btn');
+            
+            // 初始化选择状态
+            let selectedBreed = '不限';
+            let selectedExpression = '开心';
+            let selectedStyle = '卡通';
+            let selectedEnvironment = '草地';
+            
+            // 品种选择处理
+            breedButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    breedButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedBreed = this.dataset.breed;
+                });
+            });
+            
+            // 表情选择处理
+            expressionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    expressionButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedExpression = this.dataset.expression;
+                });
+            });
+            
+            // 风格选择处理
+            styleButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    styleButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedStyle = this.dataset.style;
+                });
+            });
+            
+            // 环境选择处理
+            environmentButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    environmentButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedEnvironment = this.dataset.environment;
+                });
+            });
+            
+            // 预设提示词按钮处理
+            presetPromptButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    descriptionInput.value = this.dataset.prompt;
+                });
+            });
+            
+            // 生成按钮点击事件
+            generateBtn.addEventListener('click', function() {
+                const apiKey = apiKeyInput.value.trim();
+                const appId = appIdInput.value.trim();
+                let description = descriptionInput.value.trim();
+                
+                if (!apiKey) {
+                    alert('请输入火山引擎API密钥');
+                    return;
+                }
+                if (!appId) {
+                    alert('请输入火山引擎应用ID');
+                    return;
+                }
+                
+                // 如果用户没有输入自定义描述，根据选择项生成提示词
+                if (!description) {
+                    description = generatePrompt();
+                }
+                
+                // 显示加载状态
+                generateBtn.disabled = true;
+                loadingIndicator.style.display = 'inline-block';
+                resultSection.style.display = 'none';
+                
+                // 调用火山引擎图像生成API
+                const timestamp = new Date().getTime().toString();
+                const signature = '简化版签名'; // 实际使用时需要根据火山引擎文档实现签名算法
+                
+                axios.post(
+                    'https://open.bigmodel.cn/api/paas/v3/model-api/ernie-vilg-v2/generate',
+                    {
+                        model: 'ernie-vilg-v2',
+                        prompt: `${description} (风格: ${selectedStyle})`,
+                        n: 1,
+                        size: '1024x1024',
+                        app_id: appId
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`,
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    }
+                )
+                .then(response => {
+                    // 获取生成的图像URL
+                    const imageUrl = response.data.data?.[0]?.url || '';
+                    if (!imageUrl) {
+                        throw new Error('未能获取生成的图像URL');
+                    }
+                    
+                    // 更新结果区域
+                    resultImage.src = imageUrl;
+                    resultImage.alt = description;
+                    resultDescription.textContent = `描述: ${description} | 风格: ${selectedStyle}`;
+                    resultSection.style.display = 'block';
+                    
+                    // 添加到历史记录
+                    addToHistory(imageUrl, description, selectedStyle);
+                })
+                .catch(error => {
+                    console.error('生成图像失败:', error);
+                    alert('生成图像失败: ' + (error.response?.data?.error?.message || '未知错误'));
+                })
+                .finally(() => {
+                    // 重置加载状态
+                    generateBtn.disabled = false;
+                    loadingIndicator.style.display = 'none';
+                });
+            });
+            
+            // 根据选择的选项生成提示词
+            function generatePrompt() {
+                let prompt = '一只';
+                
+                // 添加表情
+                prompt += `${selectedExpression}的`;
+                
+                // 添加品种（如果选择了）
+                if (selectedBreed !== '不限') {
+                    prompt += `${selectedBreed}`;
+                }
+                
+                prompt += '小狗，';
+                
+                // 添加环境
+                if (selectedEnvironment !== '简单背景') {
+                    prompt += `在${selectedEnvironment}上，`;
+                }
+                
+                // 添加其他细节
+                prompt += '高清，细节丰富，可爱，高质量';
+                
+                return prompt;
+            }
+            
+            // 添加到历史记录
+            function addToHistory(imageUrl, description, style) {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <img src="${imageUrl}" alt="${description}" class="history-image">
+                `;
+                historyItem.addEventListener('click', function() {
+                    resultImage.src = imageUrl;
+                    resultImage.alt = description;
+                    resultDescription.textContent = `描述: ${description} | 风格: ${style}`;
+                    resultSection.style.display = 'block';
+                    // 滚动到结果区域
+                    resultSection.scrollIntoView({ behavior: 'smooth' });
+                });
+                historyGallery.prepend(historyItem);
+                
+                // 限制历史记录数量为6个
+                if (historyGallery.children.length > 6) {
+                    historyGallery.removeChild(historyGallery.lastChild);
+                }
+            }
+            
+            // 初始化一些历史记录示例
+            const initialHistory = [
+                {
+                    url: 'https://picsum.photos/800/600?random=201',
+                    desc: '一只可爱的金毛犬在草地上玩耍',
+                    style: '卡通'
+                },
+                {
+                    url: 'https://picsum.photos/800/600?random=202',
+                    desc: '一只活泼的柯基犬在阳光下奔跑',
+                    style: '写实'
+                },
+                {
+                    url: 'https://picsum.photos/800/600?random=203',
+                    desc: '一只蓝色眼睛的哈士奇在雪地里',
+                    style: '水彩'
+                },
+                {
+                    url: 'https://picsum.photos/800/600?random=204',
+                    desc: '一只萌萌的萨摩耶在沙滩上',
+                    style: '动漫'
+                },
+                {
+                    url: 'https://picsum.photos/800/600?random=205',
+                    desc: '一只聪明的边牧在玩飞盘',
+                    style: '油画'
+                },
+                {
+                    url: 'https://picsum.photos/800/600?random=206',
+                    desc: '一只安静的柴犬坐在室内',
+                    style: '像素'
+                }
+            ];
+            
+            initialHistory.forEach(item => {
+                addToHistory(item.url, item.desc, item.style);
+            });
+        });
+    </script>
+</body>
+</html>

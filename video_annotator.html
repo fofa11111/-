@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频标注工具</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+            text-align: center;
+        }
+        canvas {
+            border: 2px solid #333;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 0 10px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #downloadBtn {
+            background-color: #008CBA;
+        }
+        #downloadBtn:hover {
+            background-color: #007B9A;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 4px;
+            max-width: 600px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>视频标注工具</h1>
+        <canvas id="canvas"></canvas>
+        <div class="controls">
+            <button id="playBtn">播放视频</button>
+            <button id="showSampleBtn">显示示例效果</button>
+            <button id="downloadBtn">下载标注图像</button>
+        </div>
+        <div class="info">
+            <p><strong>提示：</strong></p>
+            <p>1. 点击"播放视频"按钮尝试直接播放并标注视频</p>
+            <p>2. 如果视频无法播放，点击"显示示例效果"查看标注样式</p>
+            <p>3. 点击"下载标注图像"可保存当前显示的标注效果</p>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const playBtn = document.getElementById('playBtn');
+        const showSampleBtn = document.getElementById('showSampleBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        
+        // 设置canvas默认尺寸
+        canvas.width = 800;
+        canvas.height = 450;
+        
+        // 创建隐藏的video元素
+        const video = document.createElement('video');
+        video.src = '/images/demo.mp4'; // 使用绝对路径
+        video.crossOrigin = 'anonymous';
+        video.style.display = 'none';
+        document.body.appendChild(video);
+        
+        // 视频错误处理
+        video.addEventListener('error', function() {
+            console.error('视频加载失败:', video.error);
+            showErrorAndSample();
+        });
+        
+        // 显示错误信息和示例效果
+        function showErrorAndSample() {
+            // 清空canvas并显示提示
+            ctx.fillStyle = '#ddd';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('视频加载失败，点击"显示示例效果"按钮查看标注样式', canvas.width/2, canvas.height/2);
+        }
+        
+        // 等待视频加载完成后设置canvas尺寸
+        video.addEventListener('loadedmetadata', function() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+        });
+        
+        // 绘制视频帧和文本
+        function drawFrame() {
+            if (!video.paused && !video.ended) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                drawAnnotations();
+                requestAnimationFrame(drawFrame);
+            }
+        }
+        
+        // 绘制标注文本
+        function drawAnnotations() {
+            // 设置文本样式
+            ctx.font = 'bold 36px Arial';
+            ctx.fillStyle = 'white';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            
+            // 在左上角绘制"我方"
+            const allyText = '我方';
+            ctx.strokeText(allyText, 30, 50);
+            ctx.fillText(allyText, 30, 50);
+            
+            // 在右上角绘制"敌方"
+            const enemyText = '敌方';
+            const enemyTextWidth = ctx.measureText(enemyText).width;
+            ctx.strokeText(enemyText, canvas.width - enemyTextWidth - 30, 50);
+            ctx.fillText(enemyText, canvas.width - enemyTextWidth - 30, 50);
+        }
+        
+        // 显示示例效果
+        function showSampleEffect() {
+            // 创建一个简单的示例场景
+            ctx.fillStyle = '#4a90e2';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制一些简单的图形作为示例内容
+            ctx.fillStyle = '#50e3c2';
+            ctx.beginPath();
+            ctx.arc(canvas.width/4, canvas.height/2, 80, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#e35050';
+            ctx.beginPath();
+            ctx.arc(canvas.width*3/4, canvas.height/2, 80, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 添加标注文本
+            drawAnnotations();
+        }
+        
+        // 按钮事件
+        playBtn.addEventListener('click', function() {
+            try {
+                video.play().then(() => {
+                    drawFrame();
+                }).catch(error => {
+                    console.error('播放失败:', error);
+                    showErrorAndSample();
+                });
+            } catch (e) {
+                console.error('播放异常:', e);
+                showErrorAndSample();
+            }
+        });
+        
+        showSampleBtn.addEventListener('click', function() {
+            showSampleEffect();
+        });
+        
+        // 下载功能
+        downloadBtn.addEventListener('click', function() {
+            try {
+                const dataURL = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = dataURL;
+                link.download = 'annotated_result.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                alert('标注图像已下载！请注意：这只是单帧图像效果。如需完整视频标注，建议使用专业视频编辑软件。');
+            } catch (e) {
+                console.error('下载失败:', e);
+                alert('下载失败，请稍后重试。');
+            }
+        });
+        
+        // 视频播放结束时停止绘制
+        video.addEventListener('ended', function() {
+            // 绘制最后一帧
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            drawAnnotations();
+        });
+        
+        // 页面加载时显示初始提示
+        window.addEventListener('load', function() {
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('请点击上方按钮开始', canvas.width/2, canvas.height/2);
+        });
+    </script>
+</body>
+</html>

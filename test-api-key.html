@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API密钥测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .container {
+            background-color: #f5f5f5;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: inline-block;
+            margin-left: 0.8rem;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 4px;
+            background: white;
+        }
+        .success {
+            border-left: 4px solid #2ecc71;
+        }
+        .error {
+            border-left: 4px solid #e74c3c;
+        }
+        pre {
+            background: #f1f1f1;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API密钥测试工具</h1>
+        
+        <div class="input-group">
+            <label for="api-key">火山引擎API 密钥:</label>
+            <input type="text" id="api-key" value="1a89a2fb-f91a-408f-9c6c-850d45023143" placeholder="输入您的API密钥">
+        </div>
+        
+        <div class="input-group">
+            <label for="app-id">火山引擎应用ID:</label>
+            <input type="text" id="app-id" placeholder="输入您的应用ID">
+        </div>
+        
+        <div class="input-group">
+            <label for="prompt">测试提示词:</label>
+            <input type="text" id="prompt" value="一只可爱的小猫" placeholder="输入测试提示词">
+        </div>
+        
+        <button id="test-btn" class="btn">
+            测试API密钥
+            <span id="loading-indicator" class="loading" style="display: none;"></span>
+        </button>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>测试结果:</h3>
+            <pre id="result-content"></pre>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const testBtn = document.getElementById('test-btn');
+            const apiKeyInput = document.getElementById('api-key');
+            const appIdInput = document.getElementById('app-id');
+            const promptInput = document.getElementById('prompt');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('result-content');
+            
+            testBtn.addEventListener('click', function() {
+                const apiKey = apiKeyInput.value.trim();
+                const appId = appIdInput.value.trim();
+                const prompt = promptInput.value.trim();
+                
+                if (!apiKey) {
+                    alert('请输入API密钥');
+                    return;
+                }
+                
+                if (!appId) {
+                    alert('请输入应用ID');
+                    return;
+                }
+                
+                // 显示加载状态
+                testBtn.disabled = true;
+                loadingIndicator.style.display = 'inline-block';
+                resultDiv.style.display = 'none';
+                
+                // 准备API调用参数
+                const timestamp = new Date().getTime().toString();
+                // 注意：这里使用简化的签名，实际使用时需要按照火山引擎文档实现正确的签名算法
+                const signature = '简化版签名';
+                
+                console.log('准备调用API，参数:', {
+                    apiKey: apiKey,
+                    appId: appId,
+                    prompt: prompt,
+                    timestamp: timestamp,
+                    signature: signature
+                });
+                
+                // 调用火山引擎图像生成API进行测试
+                axios.post(
+                    'https://open.bigmodel.cn/api/paas/v3/model-api/ernie-vilg-v2/generate',
+                    {
+                        model: 'ernie-vilg-v2',
+                        prompt: prompt,
+                        n: 1,
+                        size: '1024x1024',
+                        app_id: appId
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`,
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    }
+                )
+                .then(response => {
+                    console.log('API调用成功:', response);
+                    // 显示结果
+                    resultDiv.className = 'result success';
+                    resultContent.textContent = JSON.stringify(response.data, null, 2);
+                    resultDiv.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('API调用失败:', error);
+                    // 显示错误
+                    resultDiv.className = 'result error';
+                    if (error.response) {
+                        resultContent.textContent = `状态码: ${error.response.status}\n\n响应体:\n${JSON.stringify(error.response.data, null, 2)}`;
+                    } else if (error.request) {
+                        resultContent.textContent = '没有收到响应，请检查网络连接。';
+                    } else {
+                        resultContent.textContent = `请求配置错误: ${error.message}`;
+                    }
+                    resultDiv.style.display = 'block';
+                })
+                .finally(() => {
+                    // 重置加载状态
+                    testBtn.disabled = false;
+                    loadingIndicator.style.display = 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

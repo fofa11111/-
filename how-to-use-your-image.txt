@@ -1,0 +1,14 @@
+# 如何直接使用您的图片
+
+如果您希望直接使用自己提供的猫咪图片，而不是让我创建新的SVG文件，请按照以下步骤操作：
+
+1. **将您的图片文件上传到项目的images目录**
+   路径：`/Users/hetao/Desktop/traaaaaa/images`
+
+2. **告诉我图片的文件名**
+   例如：`my-cat-image.png` 或 `original-cat.svg`
+
+3. **我会帮您修改代码**
+   我会更新 `ai_navigation_assistant.js` 文件，将图片引用路径改为您提供的图片文件名
+
+完成后，您的网站将直接显示您上传的原始图片，而不是我创建的SVG文件。

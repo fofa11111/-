@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>像素小狗游戏</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .game-container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .dog-container {
+            margin: 20px 0;
+        }
+        
+        canvas {
+            border: 2px solid #333;
+            background-color: #e0e0e0;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .description {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>像素小狗互动游戏</h1>
+        <div class="dog-container">
+            <canvas id="dogCanvas" width="200" height="200"></canvas>
+        </div>
+        <div class="controls">
+            <button id="sitButton">坐下</button>
+            <button id="twistButton">坐下（别人）</button>
+        </div>
+        <div class="description">
+            <p>点击"坐下"按钮让小狗坐下，点击"坐下（别人）"按钮让小狗扭扭屁股。</p>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('dogCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 小狗的状态
+            let dogState = 'standing'; // standing, sitting, twisting
+            let twistFrame = 0;
+            let isTwisting = false;
+            
+            // 移除像素绘制辅助函数，因为我们现在使用更流畅的Canvas绘图API
+            
+            // 绘制站立的小狗
+            function drawStandingDog() {
+                // 清除画布
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 使用更圆润的形状和更自然的颜色
+                const dogColor = '#A0522D'; // 棕色狗毛
+                const lighterColor = '#CD853F'; // 浅色部分
+                const darkColor = '#8B4513'; // 深色部分
+                
+                // 身体 - 使用连续的形状而不是方块
+                ctx.fillStyle = dogColor;
+                
+                // 躯干
+                ctx.beginPath();
+                ctx.ellipse(100, 120, 35, 25, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 头部
+                ctx.beginPath();
+                ctx.ellipse(70, 90, 25, 22, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 耳朵
+                ctx.fillStyle = darkColor;
+                ctx.beginPath();
+                ctx.moveTo(55, 70);
+                ctx.bezierCurveTo(50, 60, 55, 55, 60, 65);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(85, 70);
+                ctx.bezierCurveTo(90, 60, 85, 55, 80, 65);
+                ctx.fill();
+                
+                // 浅色面部区域
+                ctx.fillStyle = lighterColor;
+                ctx.beginPath();
+                ctx.ellipse(70, 92, 18, 14, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 眼睛
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(62, 85, 3, 0, Math.PI * 2);
+                ctx.arc(78, 85, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 眼白
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(63, 84, 1, 0, Math.PI * 2);
+                ctx.arc(79, 84, 1, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 鼻子
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.ellipse(70, 95, 6, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 嘴
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(66, 100);
+                ctx.bezierCurveTo(70, 103, 74, 100, 74, 100);
+                ctx.stroke();
+                
+                // 前腿
+                ctx.fillStyle = dogColor;
+                ctx.beginPath();
+                ctx.fillRect(58, 140, 10, 25);
+                ctx.fillRect(82, 140, 10, 25);
+                
+                // 后腿
+                ctx.beginPath();
+                ctx.fillRect(38, 140, 10, 25);
+                ctx.fillRect(102, 140, 10, 25);
+                
+                // 爪子
+                ctx.fillStyle = lighterColor;
+                ctx.fillRect(58, 165, 10, 3);
+                ctx.fillRect(82, 165, 10, 3);
+                ctx.fillRect(38, 165, 10, 3);
+                ctx.fillRect(102, 165, 10, 3);
+                
+                // 尾巴
+                ctx.fillStyle = dogColor;
+                ctx.beginPath();
+                ctx.moveTo(135, 120);
+                ctx.bezierCurveTo(150, 115, 160, 110, 165, 105);
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+            
+            // 绘制坐下的小狗
+            function drawSittingDog() {
+                // 清除画布
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const dogColor = '#A0522D'; // 棕色狗毛
+                const lighterColor = '#CD853F'; // 浅色部分
+                const darkColor = '#8B4513'; // 深色部分
+                
+                // 躯干（坐下姿势）
+                ctx.fillStyle = dogColor;
+                ctx.beginPath();
+                ctx.ellipse(100, 125, 35, 30, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 头部
+                ctx.beginPath();
+                ctx.ellipse(70, 90, 25, 22, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 耳朵
+                ctx.fillStyle = darkColor;
+                ctx.beginPath();
+                ctx.moveTo(55, 70);
+                ctx.bezierCurveTo(50, 60, 55, 55, 60, 65);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(85, 70);
+                ctx.bezierCurveTo(90, 60, 85, 55, 80, 65);
+                ctx.fill();
+                
+                // 浅色面部区域
+                ctx.fillStyle = lighterColor;
+                ctx.beginPath();
+                ctx.ellipse(70, 92, 18, 14, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 眼睛
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(62, 85, 3, 0, Math.PI * 2);
+                ctx.arc(78, 85, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 眼白
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(63, 84, 1, 0, Math.PI * 2);
+                ctx.arc(79, 84, 1, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 鼻子
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.ellipse(70, 95, 6, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 嘴
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(66, 100);
+                ctx.bezierCurveTo(70, 103, 74, 100, 74, 100);
+                ctx.stroke();
+                
+                // 前腿（伸直）
+                ctx.fillStyle = dogColor;
+                ctx.beginPath();
+                ctx.fillRect(60, 145, 10, 25);
+                ctx.fillRect(80, 145, 10, 25);
+                
+                // 爪子
+                ctx.fillStyle = lighterColor;
+                ctx.fillRect(60, 170, 10, 3);
+                ctx.fillRect(80, 170, 10, 3);
+                
+                // 后腿（弯曲）
+                ctx.fillStyle = dogColor;
+                ctx.beginPath();
+                ctx.moveTo(40, 135);
+                ctx.lineTo(40, 155);
+                ctx.lineTo(55, 160);
+                ctx.lineTo(55, 140);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(110, 135);
+                ctx.lineTo(110, 155);
+                ctx.lineTo(95, 160);
+                ctx.lineTo(95, 140);
+                ctx.closePath();
+                ctx.fill();
+                
+                // 尾巴（下垂）
+                ctx.strokeStyle = dogColor;
+                ctx.beginPath();
+                ctx.moveTo(135, 130);
+                ctx.bezierCurveTo(150, 140, 160, 150, 165, 160);
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+            
+            // 绘制扭屁股的小狗
+            function drawTwistingDog(frame) {
+                // 清除画布
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 根据帧调整屁股位置
+                const offset = Math.sin(frame * 0.3) * 5;
+                
+                const dogColor = '#A0522D'; // 棕色狗毛
+                const lighterColor = '#CD853F'; // 浅色部分
+                const darkColor = '#8B4513'; // 深色部分
+                
+                // 躯干（带有偏移效果）
+                ctx.fillStyle = dogColor;
+                ctx.beginPath();
+                ctx.ellipse(100 + offset, 120, 35, 25, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 头部
+                ctx.beginPath();
+                ctx.ellipse(70, 90, 25, 22, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 耳朵
+                ctx.fillStyle = darkColor;
+                ctx.beginPath();
+                ctx.moveTo(55, 70);
+                ctx.bezierCurveTo(50, 60, 55, 55, 60, 65);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(85, 70);
+                ctx.bezierCurveTo(90, 60, 85, 55, 80, 65);
+                ctx.fill();
+                
+                // 浅色面部区域
+                ctx.fillStyle = lighterColor;
+                ctx.beginPath();
+                ctx.ellipse(70, 92, 18, 14, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 眼睛
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(62, 85, 3, 0, Math.PI * 2);
+                ctx.arc(78, 85, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 眼白
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(63, 84, 1, 0, Math.PI * 2);
+                ctx.arc(79, 84, 1, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 鼻子
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.ellipse(70, 95, 6, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 微笑的嘴
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(65, 100);
+                ctx.bezierCurveTo(70, 105, 75, 100, 75, 100);
+                ctx.stroke();
+                
+                // 前腿
+                ctx.fillStyle = dogColor;
+                ctx.beginPath();
+                ctx.fillRect(58, 140, 10, 25);
+                ctx.fillRect(82, 140, 10, 25);
+                
+                // 爪子
+                ctx.fillStyle = lighterColor;
+                ctx.fillRect(58, 165, 10, 3);
+                ctx.fillRect(82, 165, 10, 3);
+                
+                // 后腿（带有偏移）
+                ctx.beginPath();
+                ctx.fillRect(38 + offset, 140, 10, 25);
+                ctx.fillRect(102 + offset, 140, 10, 25);
+                
+                ctx.fillStyle = lighterColor;
+                ctx.fillRect(38 + offset, 165, 10, 3);
+                ctx.fillRect(102 + offset, 165, 10, 3);
+                
+                // 尾巴（摇摆）
+                const tailOffset = Math.sin(frame * 0.5) * 8;
+                ctx.strokeStyle = dogColor;
+                ctx.beginPath();
+                ctx.moveTo(135 + offset, 120);
+                ctx.bezierCurveTo(150 + tailOffset, 115 + tailOffset/2, 
+                                 160 + tailOffset, 110, 165 + tailOffset, 105);
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+            
+            // 绘制小狗的主函数
+            function drawDog() {
+                switch(dogState) {
+                    case 'standing':
+                        drawStandingDog();
+                        break;
+                    case 'sitting':
+                        drawSittingDog();
+                        break;
+                    case 'twisting':
+                        drawTwistingDog(twistFrame);
+                        if (isTwisting) {
+                            twistFrame++;
+                        }
+                        break;
+                }
+                
+                // 动画循环
+                requestAnimationFrame(drawDog);
+            }
+            
+            // 坐下按钮事件
+            document.getElementById('sitButton').addEventListener('click', function() {
+                dogState = 'sitting';
+                isTwisting = false;
+                
+                // 2秒后自动还原
+                setTimeout(function() {
+                    dogState = 'standing';
+                }, 2000);
+            });
+            
+            // 扭屁股按钮事件
+            document.getElementById('twistButton').addEventListener('click', function() {
+                dogState = 'twisting';
+                isTwisting = true;
+                twistFrame = 0;
+                
+                // 2秒后自动还原
+                setTimeout(function() {
+                    dogState = 'standing';
+                    isTwisting = false;
+                }, 2000);
+            });
+            
+            // 开始动画循环
+            drawDog();
+        });
+    </script>
+</body>
+</html>
